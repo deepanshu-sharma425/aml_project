@@ -1,0 +1,38 @@
+ha         {'15 min': 4.186, '30 min': 4.186, '60 min': 4.186, 'avg': 4.186}
+persistence {'15 min': 3.498, '30 min': 4.205, '60 min': 5.378, 'avg': 4.241}
+ridge val MAE by alpha: {0.01: 3.630074977874756, 1.0: 3.6300711631774902, 100.0: 3.6296045780181885, 1000.0: 3.626112461090088} -> 1000.0
+ridge      {'15 min': 3.371, '30 min': 3.78, '60 min': 4.093, 'avg': 3.686}
+  hgb {'learning_rate': 0.1, 'max_leaf_nodes': 31, 'val_mae': 3.0666267562647596, 'n_iter': 400}
+  hgb {'learning_rate': 0.1, 'max_leaf_nodes': 127, 'val_mae': 3.0384989729371616, 'n_iter': 400}
+  hgb {'learning_rate': 0.05, 'max_leaf_nodes': 63, 'max_iter': 800, 'val_mae': 3.0412518289283996, 'n_iter': 800}
+  h= 1  rows=1,152,702  59.9s
+  h= 2  rows=1,153,345  47.2s
+  h= 3  rows=1,153,375  50.0s
+  h= 4  rows=1,149,866  34.7s
+  h= 5  rows=1,152,702  51.2s
+  h= 6  rows=1,153,347  55.0s
+  h= 7  rows=1,153,375  42.1s
+  h= 8  rows=1,149,867  48.0s
+  h= 9  rows=1,152,703  49.1s
+  h=10  rows=1,153,347  48.7s
+  h=11  rows=1,153,373  52.1s
+  h=12  rows=1,149,865  48.7s
+hgb        {'15 min': 2.893, '30 min': 3.289, '60 min': 3.656, 'avg': 3.219}
+  ablation {'groups': 'lags', 'n_groups': 1, 'horizon': 3, 'val_mae': 2.83227155564649}
+  ablation {'groups': 'lags', 'n_groups': 1, 'horizon': 6, 'val_mae': 3.422755387550574}
+  ablation {'groups': 'lags', 'n_groups': 1, 'horizon': 12, 'val_mae': 4.359982680158117}
+  ablation {'groups': 'lags+window_stats', 'n_groups': 2, 'horizon': 3, 'val_mae': 2.8234738831457915}
+  ablation {'groups': 'lags+window_stats', 'n_groups': 2, 'horizon': 6, 'val_mae': 3.4121301074140864}
+  ablation {'groups': 'lags+window_stats', 'n_groups': 2, 'horizon': 12, 'val_mae': 4.3412411897479455}
+  ablation {'groups': 'lags+window_stats+calendar', 'n_groups': 3, 'horizon': 3, 'val_mae': 2.7562458546119295}
+  ablation {'groups': 'lags+window_stats+calendar', 'n_groups': 3, 'horizon': 6, 'val_mae': 3.255880382144138}
+  ablation {'groups': 'lags+window_stats+calendar', 'n_groups': 3, 'horizon': 12, 'val_mae': 3.962400168361511}
+  ablation {'groups': 'lags+window_stats+calendar+profile', 'n_groups': 4, 'horizon': 3, 'val_mae': 2.7364929858649396}
+  ablation {'groups': 'lags+window_stats+calendar+profile', 'n_groups': 4, 'horizon': 6, 'val_mae': 3.125838170607599}
+  ablation {'groups': 'lags+window_stats+calendar+profile', 'n_groups': 4, 'horizon': 12, 'val_mae': 3.5170917841183598}
+  ablation {'groups': 'lags+window_stats+calendar+profile+spatial', 'n_groups': 5, 'horizon': 3, 'val_mae': 2.684072289370935}
+  ablation {'groups': 'lags+window_stats+calendar+profile+spatial', 'n_groups': 5, 'horizon': 6, 'val_mae': 3.051613976234484}
+  ablation {'groups': 'lags+window_stats+calendar+profile+spatial', 'n_groups': 5, 'horizon': 12, 'val_mae': 3.4320923106133536}
+  ablation {'groups': 'lags+window_stats+calendar+profile+spatial+sensor', 'n_groups': 6, 'horizon': 3, 'val_mae': 2.6754150912208896}
+  ablation {'groups': 'lags+window_stats+calendar+profile+spatial+sensor', 'n_groups': 6, 'horizon': 6, 'val_mae': 3.0384989729371616}
+  ablation {'groups': 'lags+window_stats+calendar+profile+spatial+sensor', 'n_groups': 6, 'horizon': 12, 'val_mae': 3.411411099654808}

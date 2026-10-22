@@ -1,0 +1,4 @@
+model_a,model_b,horizon,mae_a,mae_b,dm_stat,p_value
+Gradient Boosting (features),Ridge (features),15 min,2.8984043310896688,3.376144198366208,-74.80388827331453,0.0
+Gradient Boosting (features),Ridge (features),30 min,3.2952902537778987,3.7870104303123497,-47.33745598896173,0.0
+Gradient Boosting (features),Ridge (features),60 min,3.6633684118648557,4.101224715767113,-29.726611948443228,0.0

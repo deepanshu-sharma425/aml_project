@@ -1,0 +1,168 @@
+{
+  "summary": {
+    "time_steps": 34272,
+    "sensors": 207,
+    "start": "2012-03-01 00:00:00",
+    "end": "2012-06-27 23:55:00",
+    "days": 119,
+    "interval_min": 5,
+    "missing_pct": 8.109350825676486,
+    "all_sensor_outage_steps": 2148,
+    "speed_mean": 58.45972442626953,
+    "speed_std": 13.023601531982422,
+    "speed_min": 0.3333333432674408,
+    "speed_median": 63.22222137451172,
+    "speed_max": 70.0,
+    "pct_at_cap_70": 0.5073322572995069,
+    "pct_below_40": 10.857904323391832,
+    "graph_edges_incl_self": 1722,
+    "graph_edges_excl_self": 1515,
+    "split_windows": {
+      "train": 23974,
+      "val": 3425,
+      "test": 6850
+    },
+    "split_dates": {
+      "train": [
+        "2012-03-01 00:55:00",
+        "2012-05-23 06:40:00"
+      ],
+      "val": [
+        "2012-05-23 06:45:00",
+        "2012-06-04 04:05:00"
+      ],
+      "test": [
+        "2012-06-04 04:10:00",
+        "2012-06-27 22:55:00"
+      ]
+    }
+  },
+  "eda_missingness": {
+    "per_sensor_missing_pct": {
+      "min": 6.26750700280112,
+      "median": 6.973622782446312,
+      "max": 20.10387488328665
+    },
+    "days_over_50pct_missing": [
+      "2012-03-26",
+      "2012-03-27",
+      "2012-04-08",
+      "2012-04-25",
+      "2012-06-17"
+    ],
+    "longest_gap_steps_median": 381
+  },
+  "eda_distribution": {
+    "percentiles_1_5_25_50_75_95_99": [
+      13.12,
+      25.62,
+      57.12,
+      63.22,
+      66.5,
+      68.89,
+      69.75
+    ],
+    "skewness": -1.994214415550232
+  },
+  "eda_daily_profile": {
+    "weekday_min_speed": 45.24900817871094,
+    "weekday_min_at_hour": 17.5,
+    "weekend_min_speed": 56.79364776611328,
+    "weekend_min_at_hour": 13.5,
+    "pct_below_40mph": 10.857904323391832
+  },
+  "eda_acf": {
+    "acf_raw_lag_5min": 0.8598076821252781,
+    "acf_raw_lag_1h": 0.5654187720788251,
+    "acf_raw_lag_1day": 0.3598100023238646,
+    "acf_raw_lag_1week": 0.397925072020966,
+    "acf_anomaly_lag_1h": 0.410373686879911,
+    "acf_anomaly_lag_1day": 0.07276786058578076
+  },
+  "eda_spatial_corr": {
+    "corr_anomaly_graph_neighbours": 0.2652717829465686,
+    "corr_anomaly_unconnected_pairs": 0.0721116577132372,
+    "corr_raw_graph_neighbours": 0.41755685763222566,
+    "spearman_distance_vs_anomaly_corr": -0.1962596984339599
+  },
+  "eda_sensor_map": {
+    "out_degree_mean": 7.318840579710145,
+    "out_degree_max": 18,
+    "isolated_sensors_no_out_edges": 5,
+    "isolated_sensors_no_in_edges": 2,
+    "one_way_edge_fraction": 0.7333333333333333
+  },
+  "eda_split": {
+    "train": {
+      "mean": 58.58330154418945,
+      "std": 12.82396411895752,
+      "missing_pct": 7.128092470546796
+    },
+    "val": {
+      "mean": 58.89228439331055,
+      "std": 13.196234703063965,
+      "missing_pct": 6.964843612257132
+    },
+    "test": {
+      "mean": 57.75932312011719,
+      "std": 13.640379905700684,
+      "missing_pct": 12.106703339327902
+    }
+  },
+  "eda_example_week": {},
+  "stationarity": {
+    "adf": [
+      {
+        "sensor": "717447",
+        "adf_stat": -17.66751600360957,
+        "p_value": 3.65777832238924e-30
+      },
+      {
+        "sensor": "737529",
+        "adf_stat": -16.333022382241985,
+        "p_value": 3.0477307309246695e-29
+      },
+      {
+        "sensor": "716331",
+        "adf_stat": -13.647528013909046,
+        "p_value": 1.6089720697502935e-25
+      },
+      {
+        "sensor": "760987",
+        "adf_stat": -21.681259064656388,
+        "p_value": 0.0
+      },
+      {
+        "sensor": "773953",
+        "adf_stat": -19.616013042512026,
+        "p_value": 0.0
+      },
+      {
+        "sensor": "774067",
+        "adf_stat": -20.97933077638218,
+        "p_value": 0.0
+      },
+      {
+        "sensor": "717489",
+        "adf_stat": -18.931542336594056,
+        "p_value": 0.0
+      },
+      {
+        "sensor": "769867",
+        "adf_stat": -13.595026016800423,
+        "p_value": 2.0027334696717485e-25
+      },
+      {
+        "sensor": "717583",
+        "adf_stat": -20.1639098735474,
+        "p_value": 0.0
+      },
+      {
+        "sensor": "769373",
+        "adf_stat": -17.687584314899368,
+        "p_value": 3.5844673501927196e-30
+      }
+    ],
+    "share_rejecting_unit_root_5pct": 1.0
+  }
+}

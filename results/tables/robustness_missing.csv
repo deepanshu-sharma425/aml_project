@@ -1,0 +1,9 @@
+model,condition,MAE_60min,n
+Historical Average,latest input observed,4.171413421630859,1210997
+Historical Average,latest input missing,4.702064514160156,35225
+Persistence,latest input observed,5.305275917053223,1210997
+Persistence,latest input missing,7.894143104553223,35225
+Ridge (features),latest input observed,4.060190200805664,1210997
+Ridge (features),latest input missing,5.234633445739746,35225
+Gradient Boosting (features),latest input observed,3.6314210891723633,1210997
+Gradient Boosting (features),latest input missing,4.499262809753418,35225
