@@ -19,7 +19,11 @@ def graph_mix(x: torch.Tensor, a: torch.Tensor) -> torch.Tensor:
 
 
 class DiffusionConv(nn.Module):
-    """Z = sum_k sum_s  P_k^s X W_{k,s}   for s = 0..order, k over supports."""
+    """Z = X W_0 + sum_{P in supports} sum_{s=1..order} (P^T)^s X W_{P,s}.
+
+    ``graph_mix`` applies P as x -> P^T x, so each node receives the mass a random
+    walk on P carries into it; the 1x1 convolution implements all the W's.
+    """
 
     def __init__(self, c_in: int, c_out: int, n_supports: int, order: int = 2, dropout: float = 0.3):
         super().__init__()

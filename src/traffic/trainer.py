@@ -54,7 +54,7 @@ class WindowSampler:
 
 class Trainer:
     def __init__(self, model: nn.Module, data: METRLA, device: torch.device | None = None,
-                 lr: float = 1e-3, weight_decay: float = 1e-4, batch_size: int = 64,
+                 lr: float = 1e-3, weight_decay: float = 1e-4, batch_size: int = 32,
                  clip: float = 5.0, ckpt: Path | None = None):
         self.device = device or pick_device()
         self.model = model.to(self.device)
@@ -85,7 +85,7 @@ class Trainer:
         return float(np.mean(losses))
 
     @torch.no_grad()
-    def predict(self, anchors: np.ndarray, batch_size: int = 128) -> np.ndarray:
+    def predict(self, anchors: np.ndarray, batch_size: int = 32) -> np.ndarray:
         self.model.eval()
         out = []
         for i in range(0, len(anchors), batch_size):

@@ -24,13 +24,21 @@ class PerHorizonRegressor:
         self.models: dict[int, object] = {}
         self.feature_names: list[str] = []
 
-    def fit(self, anchors: np.ndarray, verbose: bool = True) -> "PerHorizonRegressor":
+    def fit(self, anchors: np.ndarray, val_anchors: np.ndarray | None = None,
+            verbose: bool = True) -> "PerHorizonRegressor":
+        """``val_anchors`` (chronologically after training) drive early stopping
+        for estimators that accept ``X_val`` / ``y_val``."""
         for h in self.horizons:
             t0 = time.time()
             x, self.feature_names = self.fb.build(anchors, h, self.groups)
             y = self.fb.target(anchors, h)
             keep = y > 0                                       # train on observed labels only
-            self.models[h] = clone(self.estimator).fit(x[keep], y[keep])
+            kwargs = {}
+            if val_anchors is not None:
+                xv, _ = self.fb.build(val_anchors, h, self.groups)
+                yv = self.fb.target(val_anchors, h)
+                kwargs = {"X_val": xv[yv > 0], "y_val": yv[yv > 0]}
+            self.models[h] = clone(self.estimator).fit(x[keep], y[keep], **kwargs)
             if verbose:
                 print(f"  h={h:2d}  rows={keep.sum():,}  {time.time() - t0:.1f}s", flush=True)
         return self
