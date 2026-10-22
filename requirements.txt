@@ -1,0 +1,14 @@
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+scikit-learn>=1.6
+statsmodels>=0.14
+h5py>=3.10
+torch>=2.2
+matplotlib>=3.8
+seaborn>=0.13
+networkx>=3.2
+jupyter
+nbformat
+nbconvert
+pytest>=8
