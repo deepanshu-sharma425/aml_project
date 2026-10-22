@@ -1,0 +1,28 @@
+[browser]
+gatherUsageStats = false
+
+[theme]
+baseRadius = "medium"
+showWidgetBorder = true
+showSidebarBorder = true
+
+[theme.light]
+primaryColor = "#2a78d6"
+backgroundColor = "#f9f9f7"
+secondaryBackgroundColor = "#f1f0ec"
+textColor = "#0b0b0b"
+borderColor = "#e1e0d9"
+greenTextColor = "#006300"
+redTextColor = "#d03b3b"
+
+[theme.dark]
+primaryColor = "#3987e5"
+backgroundColor = "#0d0d0d"
+secondaryBackgroundColor = "#1a1a19"
+textColor = "#f0efec"
+borderColor = "#2c2c2a"
+greenTextColor = "#0ca30c"
+redTextColor = "#e66767"
+
+[client]
+toolbarMode = "minimal"
