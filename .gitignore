@@ -11,3 +11,4 @@ report/*.out
 report/*.bbl
 report/*.blg
 results/predictions/
+*.egg-info/
