@@ -1,0 +1,58 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+\else  % XeLaTeX / Tectonic: Times-compatible OpenType font
+  \usepackage{fontspec}
+  \setmainfont{texgyretermes}[Extension=.otf, UprightFont=*-regular, BoldFont=*-bold,
+    ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+\fi
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cite}
+\graphicspath{{../results/figures/}}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\vect}[1]{\mathbf{#1}}
+
+\begin{document}
+
+\title{Spatio-Temporal Traffic Speed Forecasting on METR-LA:\\
+From Engineered Features to Graph Neural Networks}
+
+% TODO: replace the placeholders below with your details.
+\author{\IEEEauthorblockN{Student Name 1, Student Name 2}
+\IEEEauthorblockA{\textit{Department of Computer Science, Institution Name}\\
+City, Country\\
+email@institution.edu}
+}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\begin{IEEEkeywords}
+traffic forecasting, spatio-temporal data, graph neural networks, Graph WaveNet,
+gradient boosting, feature engineering, METR-LA
+\end{IEEEkeywords}
+
+\input{sections/introduction}
+\input{sections/related}
+\input{sections/data}
+\input{sections/features}
+\input{sections/method}
+\input{sections/setup}
+\input{sections/results}
+\input{sections/conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

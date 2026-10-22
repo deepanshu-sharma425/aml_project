@@ -1,0 +1,44 @@
+\section{Experimental Setup}
+\label{sec:setup}
+
+\textbf{Protocol.} We follow the standard METR-LA protocol~\cite{li2018dcrnn,wu2019gwnet}:
+12 input steps predict 12 output steps; windows are split chronologically 70/10/20
+(23,974 / 3,425 / 6,850); and MAE, RMSE and MAPE are computed on raw mph over
+\emph{non-zero} targets at horizons 3, 6 and 12 (15, 30 and 60\,min). The scaler,
+weekly profile and sensor statistics are fit on the training period only. The test
+split is used once, after all model selection.
+
+\textbf{Inputs.} Deep models receive two channels per sensor and step: z-scored speed
+(mean 58.58, std 12.83, from observed training values) and time of day in $[0,1)$.
+Following the reference pipeline, missing inputs keep their raw value 0, which
+z-scores to $-4.57$; this is a distinctive value the network can learn to recognise.
+Tabular models receive the 34 features of Section~\ref{sec:features}.
+
+\textbf{Model selection and training.} Table~\ref{tab:hparams} lists the settings.
+Consecutive windows share 11 of 12 steps, so the tabular models use every fourth
+training window ($\approx$1.15\,M observed rows per horizon) with little loss of
+information. The validation windows are split by parity: even windows select
+hyper-parameters, odd windows drive early stopping. Deep models use
+Adam~\cite{kingma2015adam} with gradient-norm clipping and keep the checkpoint with
+the best validation MAE. Graph WaveNet uses the published architecture; we use
+batch size 32 (instead of 64) to fit the 8\,GB unified memory of an Apple M3, and
+train for at most 35 epochs (instead of 100) because of compute limits. All code
+uses PyTorch~\cite{paszke2019} and scikit-learn~\cite{pedregosa2011}, with seed 0.
+
+\begin{table}[t]
+\centering
+\caption{Hyper-parameters (selected on validation where a range is shown).}
+\label{tab:hparams}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{1.9cm}p{6.1cm}}
+\toprule
+Model & Settings \\
+\midrule
+Ridge & $\lambda\in\{10^{-2},1,10^{2},10^{3}\}$, standardised features, one model per horizon \\
+Grad.\ boosting & absolute loss; $(\nu,\text{leaves})\in\{(0.1,31),(0.1,127),(0.05,63)\}$; min leaf 100; $\ell_2{=}1$; $\le$400 (800 for $\nu{=}0.05$) iterations, early stopping (patience 20); one model per horizon \\
+LSTM & 2 layers, 64 units, dropout 0.1, MLP head; Adam lr $10^{-3}$, weight decay $10^{-4}$, batch 32, $\le$60 epochs, patience 10 \\
+Graph WaveNet & 4 blocks $\times$ 2 layers, kernel 2, channels 32/32/256/512 (residual/dilation/skip/end), diffusion order 2, embedding dim 10, dropout 0.3; Adam lr $10^{-3}$, weight decay $10^{-4}$, clip 5, batch 32, $\le$35 epochs, patience 8 \\
+GWN ablation & as above, exactly 8 epochs for every variant \\
+\bottomrule
+\end{tabular}
+\end{table}

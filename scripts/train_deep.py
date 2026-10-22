@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 import time
 from pathlib import Path
 
@@ -18,12 +17,10 @@ import numpy as np
 import torch
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
-
-from traffic.data import load_metrla, transition_matrices  # noqa: E402
-from traffic.metrics import evaluate  # noqa: E402
-from traffic.models import GraphWaveNet, LSTMForecaster  # noqa: E402
-from traffic.trainer import Trainer, set_seed  # noqa: E402
+from traffic.data import load_metrla, transition_matrices
+from traffic.metrics import evaluate
+from traffic.models import GraphWaveNet, LSTMForecaster
+from traffic.trainer import Trainer, set_seed
 
 GWN_VARIANTS = {
     # name: (use fixed road-graph supports, use adaptive adjacency, use graph conv)
@@ -49,10 +46,11 @@ def main():
     p.add_argument("--epochs", type=int, default=40)
     p.add_argument("--patience", type=int, default=8)
     p.add_argument("--lr", type=float, default=1e-3)
-    p.add_argument("--batch-size", type=int, default=64)
+    p.add_argument("--batch-size", type=int, default=32)
     p.add_argument("--hidden", type=int, default=64)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--tag", default="main")
+    p.add_argument("--out", type=Path, default=ROOT / "results", help="output directory")
     args = p.parse_args()
 
     set_seed(args.seed)
@@ -63,7 +61,7 @@ def main():
     print(f"{run}: {sum(q.numel() for q in model.parameters()):,} parameters", flush=True)
 
     trainer = Trainer(model, data, lr=args.lr, batch_size=args.batch_size,
-                      ckpt=ROOT / "checkpoints" / f"{run}.pt")
+                      ckpt=args.out.parent / "checkpoints" / f"{run}.pt")
     t0 = time.time()
     trainer.fit(args.epochs, args.patience, seed=args.seed)
     train_time = time.time() - t0
@@ -75,7 +73,7 @@ def main():
     y = data.speed[test[:, None] + np.arange(1, data.seq_out + 1)]
     metrics = evaluate(pred, y)
 
-    out = ROOT / "results"
+    out = args.out
     (out / "predictions").mkdir(parents=True, exist_ok=True)
     (out / "metrics").mkdir(parents=True, exist_ok=True)
     (out / "history").mkdir(parents=True, exist_ok=True)
@@ -83,7 +81,7 @@ def main():
     trainer.save_history(out / "history" / f"{run}.json")
     info = {"model": run, "params": sum(q.numel() for q in model.parameters()),
             "epochs_run": len(trainer.history), "train_sec": train_time, "infer_sec": infer_time,
-            "args": vars(args), "metrics": metrics}
+            "args": {k: str(v) for k, v in vars(args).items()}, "metrics": metrics}
     (out / "metrics" / f"{run}.json").write_text(json.dumps(info, indent=2))
     if args.model == "gwnet" and model.adaptive:
         np.save(out / "predictions" / f"{run}_adaptive_adj.npy", model.adaptive_adj().detach().cpu().numpy())

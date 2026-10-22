@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\caption{Cumulative feature-group ablation for gradient boosting (validation MAE, mph).}
+\label{tab:feat_ablation}
+\begin{tabular}{lccc}
+\toprule
+Feature groups & 15 min & 30 min & 60 min \\
+\midrule
+lags & 2.832 & 3.423 & 4.360 \\
++window stats & 2.823 & 3.412 & 4.341 \\
++calendar & 2.756 & 3.256 & 3.962 \\
++weekly profile & 2.736 & 3.126 & 3.517 \\
++spatial & 2.684 & 3.052 & 3.432 \\
++sensor stats & 2.675 & 3.038 & 3.411 \\
+\bottomrule
+\end{tabular}
+\end{table}

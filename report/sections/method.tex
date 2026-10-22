@@ -1,0 +1,125 @@
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Problem formulation}
+Let $\mathcal{G}=(\mathcal{V},\mathcal{E},W)$ be a directed graph with $N=|\mathcal{V}|$
+sensors and weighted adjacency $W\in\R^{N\times N}$, and let $X_t\in\R^{N\times C}$
+hold the $C$ input signals at time $t$ (speed and time of day). We learn
+\begin{equation}
+f_\theta:\; \big(X_{t-T'+1},\dots,X_t;\,\mathcal{G}\big)\mapsto \big(\hat{Y}_{t+1},\dots,\hat{Y}_{t+T}\big),
+\end{equation}
+with $T'=T=12$ (one hour), by minimising the masked mean absolute error
+\begin{equation}
+\mathcal{L}(\theta)=\frac{\sum_{h,i} m_{t+h,i}\,\big|\hat{y}_{t+h,i}-y_{t+h,i}\big|}{\sum_{h,i} m_{t+h,i}},\qquad m=\mathbb{1}[y>0].
+\label{eq:loss}
+\end{equation}
+The mask removes missing targets. MAE's population minimiser is the conditional
+\emph{median}, which suits the heavy left tail of speeds (sudden congestion):
+an MSE loss would let rare large errors dominate.
+
+\subsection{Graph construction}
+Following~\cite{li2018dcrnn}, $W_{ij}=\exp(-d_{ij}^2/\sigma^2)$ if this is
+$\ge\kappa=0.1$ and $0$ otherwise, where $d_{ij}$ is the road distance from $i$ to $j$ and
+$\sigma$ the standard deviation of distances. The Gaussian kernel turns distance into
+similarity, and the threshold keeps the graph sparse (1,722 non-zeros, matching the
+original preprocessing exactly). Because $d_{ij}\neq d_{ji}$ in general, $W$ is
+asymmetric.
+
+\subsection{Reference models}
+\textbf{Historical Average (HA)} predicts $\mu_i(\tau(t+h))$, the sample estimate of
+$\mathbb{E}[x\mid\text{sensor},\text{time-of-week}]$. \textbf{Persistence} predicts
+$\tilde{x}_{t,i}$ for every horizon. It is the optimal forecast for a random walk
+(martingale), and its error grows with $h$ because speed is mean-reverting.
+
+\subsection{Ridge regression}
+For each horizon, $\hat{\beta}=\arg\min_\beta\|y-X\beta\|_2^2+\lambda\|\beta\|_2^2
+=(X^\top X+\lambda I)^{-1}X^\top y$ on standardised features~\cite{hoerl1970}. The lag
+features are highly collinear (lag-1 ACF 0.86), so $X^\top X$ is ill-conditioned. The
+$\ell_2$ penalty shrinks along low-variance eigen-directions, trading a little bias
+for a large variance reduction. $\lambda$ is chosen on validation.
+
+\subsection{Gradient-boosted trees}
+Gradient boosting~\cite{friedman2001} builds an additive model
+$F_M(\vect{x})=F_0+\sum_{m=1}^{M}\nu\, h_m(\vect{x})$. Each regression tree $h_m$ is fit
+to the pseudo-residuals $r_m=-\partial \ell(y,F)/\partial F|_{F_{m-1}}$. For the
+absolute loss $\ell=|y-F|$, $r_m=\operatorname{sign}(y-F_{m-1})$, and the leaf values
+are set to the median of the residuals in each leaf, which makes the fit robust to
+outliers. We use the histogram variant~\cite{ke2017lightgbm,pedregosa2011}: features
+are binned into $\le 255$ quantile bins, so split search costs
+$O(\text{bins})$ per feature rather than $O(n\log n)$. Shrinkage $\nu$, leaf count,
+minimum leaf size, an $\ell_2$ leaf penalty and early stopping control the
+bias--variance trade-off.
+
+\textbf{Direct multi-horizon strategy.} We fit an independent model for every
+$h\in\{1,\dots,12\}$ rather than iterating a one-step model. Recursive forecasting
+feeds predictions back as inputs, so errors accumulate; the direct strategy avoids
+this and lets each horizon weight features differently~\cite{taieb2012}.
+
+\subsection{LSTM}
+A two-layer LSTM~\cite{hochreiter1997} with 64 hidden units is shared across sensors.
+Each sensor's 12-step history $(x_{t},\,\text{tod}_t)$ is encoded by
+\begin{align}
+[\,\vect{i};\vect{f};\vect{o}\,]&=\sigma\!\left(W[\vect{h}_{s-1};\vect{x}_s]+\vect{b}\right),\quad
+\vect{g}=\tanh\!\left(W_g[\vect{h}_{s-1};\vect{x}_s]+\vect{b}_g\right),\nonumber\\
+\vect{c}_s&=\vect{f}\odot\vect{c}_{s-1}+\vect{i}\odot\vect{g},\qquad
+\vect{h}_s=\vect{o}\odot\tanh(\vect{c}_s).
+\end{align}
+An MLP maps the final $\vect{h}$ to all 12 outputs. The additive cell update keeps
+gradients from vanishing. Because weights are shared and no information crosses
+sensors, the LSTM isolates the value of \emph{temporal} learning without spatial
+information.
+
+\subsection{Graph WaveNet}
+Graph WaveNet~\cite{wu2019gwnet} stacks $L=8$ layers (4 blocks $\times$ 2). Each
+layer combines a gated temporal convolution with a graph convolution, plus a residual
+path and a skip connection to the output head.
+
+\textbf{Gated dilated causal convolution.} For input
+$\mathcal{X}\in\R^{N\times D\times S}$,
+\begin{equation}
+\mathcal{H}=\tanh(\Theta_1\star_d\mathcal{X}+\vect{b})\odot\sigma(\Theta_2\star_d\mathcal{X}+\vect{c}),
+\end{equation}
+where $\star_d$ is a causal 1-D convolution with kernel $K{=}2$ and dilation $d$. The
+sigmoid gate controls information flow, like an LSTM gate, but all time steps are
+computed in parallel. With dilations $1,2$ repeated over four blocks, the receptive
+field is $1+4\cdot(K{-}1)(1+2)=13\ge T'$, so every output sees the whole input hour.
+
+\textbf{Diffusion graph convolution.} Traffic is modelled as a bidirectional random
+walk on $\mathcal{G}$, with forward and backward transition matrices
+$P_f=D_O^{-1}W$ and $P_b=D_I^{-1}W^{\top}$. With the support set
+$\mathcal{P}=\{P_f,P_b,\tilde{A}\}$,
+\begin{equation}
+Z=\mathcal{H}\,\Theta_0+\sum_{P\in\mathcal{P}}\sum_{k=1}^{K_d}\big(P^{\top}\big)^{k}\mathcal{H}\,\Theta_{P,k},\qquad K_d=2,
+\label{eq:diffusion}
+\end{equation}
+so node $j$ receives $\sum_i (P^k)_{ij}\mathcal{H}_i$, the mass a $k$-step random
+walk carries into $j$. $P_f$ propagates information along the direction of travel
+and $P_b$ against it, covering up to $K_d$ hops at a cost of $O(K_d|\mathcal{E}|D)$
+with sparse matrices~\cite{li2018dcrnn}. The concatenated terms are mixed by a
+$1{\times}1$ convolution, which implements the $\Theta$'s.
+
+\textbf{Self-adaptive adjacency.} The road graph is incomplete: some sensors have no
+outgoing edge, and dependencies such as parallel freeways are not captured by
+distance. Graph WaveNet therefore learns
+\begin{equation}
+\tilde{A}=\operatorname{softmax}\!\big(\operatorname{ReLU}(E_1E_2)\big),\qquad E_1\in\R^{N\times 10},\;E_2\in\R^{10\times N},
+\end{equation}
+end-to-end. ReLU prunes weak links, and the row softmax makes $\tilde{A}$ a valid
+transition matrix. Its rank is $\le 10$, which regularises the $O(N^2)$ parameterisation.
+
+\textbf{Output.} Skip connections from all layers are summed, passed through two
+$1{\times}1$ convolutions with ReLU, and mapped to 12 horizons at once (direct
+strategy). The model has 300,952 parameters and is trained with Eq.~\eqref{eq:loss}.
+
+\subsection{Statistical comparison}
+\textbf{Diebold--Mariano test.} For models $A$ and $B$ at horizon $h$, let
+$d_s=\overline{|e^A_s|}-\overline{|e^B_s|}$ be the loss differential of test window
+$s$, averaged over observed sensors. Under $H_0:\mathbb{E}[d_s]=0$,
+\begin{equation}
+\mathrm{DM}=\bar{d}\,\big/\sqrt{\hat{\sigma}^2_{\mathrm{LR}}/n}\;\xrightarrow{d}\;\mathcal{N}(0,1),
+\end{equation}
+where $\hat{\sigma}^2_{\mathrm{LR}}$ is a Newey--West long-run variance with
+Bartlett weights and $h$ lags~\cite{diebold1995,newey1987}. This accounts for the
+autocorrelation of overlapping forecast windows.
+\textbf{Block bootstrap.} 95\,\% confidence intervals for overall MAE resample whole
+test days with replacement~\cite{kunsch1989}, which preserves within-day dependence.

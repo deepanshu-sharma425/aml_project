@@ -1,0 +1,15 @@
+\begin{table}[t]
+\centering
+\caption{Diebold--Mariano tests (absolute-error loss, Newey--West variance). Negative statistic: model A is more accurate.}
+\label{tab:dm}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrr}
+\toprule
+Model A vs.\ Model B & Horizon & DM & $p$ \\
+\midrule
+Gradient Boosting (features) vs.\ Ridge (features) & 15 min & -74.80 & $<10^{-4}$ \\
+Gradient Boosting (features) vs.\ Ridge (features) & 30 min & -47.34 & $<10^{-4}$ \\
+Gradient Boosting (features) vs.\ Ridge (features) & 60 min & -29.73 & $<10^{-4}$ \\
+\bottomrule
+\end{tabular}
+\end{table}

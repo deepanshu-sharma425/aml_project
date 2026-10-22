@@ -1,0 +1,25 @@
+\begin{table*}[t]
+\centering
+\caption{Test-set performance on METR-LA (our runs, top) and published results (bottom). Best of our models in bold. $^\dagger$As reported by Wu et al. (2019).}
+\label{tab:main}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccccc}
+\toprule
+ & \multicolumn{3}{c}{15 min} & \multicolumn{3}{c}{30 min} & \multicolumn{3}{c}{60 min} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+Model & MAE & RMSE & MAPE (\%) & MAE & RMSE & MAPE (\%) & MAE & RMSE & MAPE (\%) \\
+\midrule
+Historical Average & 4.19 & 7.85 & 13.03 & 4.19 & 7.85 & 13.03 & 4.19 & 7.85 & 13.03 \\
+Persistence & 3.50 & 6.42 & 8.61 & 4.21 & 8.05 & 10.85 & 5.38 & 10.34 & 14.52 \\
+Ridge (features) & 3.37 & 5.71 & 8.93 & 3.78 & 6.60 & 10.59 & 4.09 & \textbf{7.33} & 12.03 \\
+Gradient Boosting (features) & \textbf{2.89} & \textbf{5.56} & \textbf{7.79} & \textbf{3.29} & \textbf{6.54} & \textbf{9.43} & \textbf{3.66} & 7.45 & \textbf{11.13} \\
+\midrule
+\multicolumn{10}{l}{\emph{Published results (same dataset and protocol)}} \\
+HA [Li et al. 2018] & 4.16 & 7.80 & 13.00 & 4.16 & 7.80 & 13.00 & 4.16 & 7.80 & 13.00 \\
+FC-LSTM [Li et al. 2018] & 3.44 & 6.30 & 9.60 & 3.77 & 7.23 & 10.90 & 4.37 & 8.69 & 13.20 \\
+DCRNN [Li et al. 2018] & 2.77 & 5.38 & 7.30 & 3.15 & 6.45 & 8.80 & 3.60 & 7.60 & 10.50 \\
+STGCN [Yu et al. 2018]$^\dagger$ & 2.88 & 5.74 & 7.62 & 3.47 & 7.24 & 9.57 & 4.59 & 9.40 & 12.70 \\
+Graph WaveNet [Wu et al. 2019] & 2.69 & 5.15 & 6.90 & 3.07 & 6.22 & 8.37 & 3.53 & 7.37 & 10.01 \\
+\bottomrule
+\end{tabular}
+\end{table*}

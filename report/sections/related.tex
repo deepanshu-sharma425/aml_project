@@ -1,0 +1,37 @@
+\section{Related Work}
+\textbf{Statistical models.} Ahmed and Cook~\cite{ahmed1979} first applied
+Box--Jenkins ARIMA to freeway data, and Williams and Hoel~\cite{williams2003}
+justified seasonal ARIMA by showing that weekly-differenced traffic is
+stationary. These models are univariate and linear, and they degrade quickly with
+horizon: on METR-LA, ARIMA's MAE rises from 3.99 to 6.90\,mph between 15 and
+60\,min~\cite{li2018dcrnn}.
+
+\textbf{Feature-based machine learning.} Non-parametric regression (k-NN) was shown
+to be competitive and robust~\cite{smith1997}. Tree ensembles~\cite{breiman2001}
+and gradient boosting~\cite{friedman2001,ke2017lightgbm} model non-linear
+interactions but depend heavily on feature engineering. In the DCRNN benchmark,
+SVR on raw lags reached only 6.72\,mph at 60\,min~\cite{li2018dcrnn}.
+
+\textbf{Deep sequence models.} Stacked autoencoders~\cite{lv2015} and
+LSTMs~\cite{hochreiter1997,ma2015lstm} learn temporal representations directly.
+Encoder--decoder (FC-)LSTMs~\cite{sutskever2014} predict a whole horizon and reach
+4.37\,mph at 60\,min on METR-LA~\cite{li2018dcrnn}, but they ignore road topology.
+
+\textbf{Spatio-temporal GNNs.} Spectral~\cite{defferrard2016} and
+first-order~\cite{kipf2017} graph convolutions made it possible to exploit
+topology. DCRNN~\cite{li2018dcrnn} models traffic as a bidirectional diffusion
+process on a directed distance graph inside a GRU seq2seq. STGCN~\cite{yu2018stgcn}
+replaces recurrence with gated temporal convolutions, and ASTGCN~\cite{guo2019astgcn}
+adds attention. Graph WaveNet~\cite{wu2019gwnet} combines diffusion convolution
+with dilated causal convolutions~\cite{oord2016wavenet} and a \emph{self-adaptive}
+adjacency learned from node embeddings, showing that the predefined graph is
+incomplete. Later work learns the graph entirely (MTGNN~\cite{wu2020mtgnn},
+AGCRN~\cite{bai2020agcrn}), uses attention (GMAN~\cite{zheng2020gman},
+STAEformer~\cite{liu2023staeformer}), or shows that simple spatial and temporal
+identity embeddings recover much of the gain (STID~\cite{shao2022stid}).
+Jiang and Luo~\cite{jiang2022survey} survey the area.
+
+\textbf{Positioning.} We adopt Graph WaveNet as our representative GNN. It is
+accurate, convolutional (so it trains on modest hardware) and lets us ablate both
+the predefined and the learned graph. We pair it with strong, leakage-free feature
+baselines and add significance testing, which the literature rarely reports.

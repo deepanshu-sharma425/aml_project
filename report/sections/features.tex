@@ -1,0 +1,50 @@
+\section{Feature Engineering}
+\label{sec:features}
+The tabular models (Ridge and gradient boosting) predict $y_{t+h,i}$, the speed of
+sensor $i$ at horizon $h$, from features of the anchor time $t$. Each
+(\,$t$, $i$\,) pair is one row. Let $\tilde{x}$ be the causally forward-filled speed,
+$\tau(t)\in\{0,\dots,2015\}$ the time-of-week slot, and
+$\mu_i(\tau)$ the \emph{weekly profile}: sensor $i$'s mean observed training speed in
+slot $\tau$. Table~\ref{tab:features} lists the 34 features. Three design rules
+apply throughout:
+\begin{enumerate}
+\item \textbf{Causality.} Features use only $\tilde{x}_{\le t}$ and statistics fitted
+on the training period. Calendar features describe the \emph{target} time
+$t{+}h$, which is known in advance. A unit test overwrites every value after $t$ and
+checks that no feature changes.
+\item \textbf{Decomposition.} Following the EDA, speed is split into the expected
+level $\mu_i(\tau(t{+}h))$ and the current anomaly $a_{t,i}=\tilde{x}_{t,i}-\mu_i(\tau(t))$.
+The model mainly has to learn how the anomaly decays.
+\item \textbf{Direction-aware space.} Using the random-walk matrices
+$P_f=D_O^{-1}W$ and $P_b=D_I^{-1}W^{\top}$ (self-loops removed), we aggregate the
+speed, anomaly and 15-min trend of downstream ($P_f$) and upstream ($P_b$)
+neighbours. Congestion waves travel upstream, so downstream slow-downs give early
+warning.
+\end{enumerate}
+
+\begin{table}[t]
+\centering
+\caption{Engineered features (34 in six groups).}
+\label{tab:features}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{1.6cm}p{6.4cm}}
+\toprule
+Group & Features \\
+\midrule
+Lags (12) & $\tilde{x}_{t-k,i}$, $k=0,\dots,11$ \\
+Window (7) & $\Delta_1$, $\Delta_3$ differences; rolling mean, std, min over 1\,h; \#missing in window; missing-now flag \\
+Calendar (4) & $\sin$, $\cos$ of time-of-day of $t{+}h$; day of week; weekend flag \\
+Profile (3) & $\mu_i(\tau(t{+}h))$; $\mu_i(\tau(t))$; anomaly $a_{t,i}$ \\
+Spatial (5) & $(P_f\tilde{x}_t)_i$, $(P_b\tilde{x}_t)_i$, $(P_f a_t)_i$, $(P_b a_t)_i$, $(P_f(\tilde{x}_t-\tilde{x}_{t-3}))_i$ \\
+Sensor (3) & training mean, std and missing rate of sensor $i$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Evaluation of features.} We measure each group's contribution with a
+\emph{cumulative ablation}: gradient boosting is retrained as groups are added and
+scored by validation MAE at 15/30/60\,min. Individual features are assessed by
+\emph{permutation importance} (the increase in validation MAE when one column is
+shuffled) on 60,000 held-out rows. Permutation importance avoids the
+high-cardinality bias of impurity-based importance. Results are in
+Section~\ref{sec:results}.
