@@ -12,3 +12,4 @@ jupyter
 nbformat
 nbconvert
 pytest>=8
+streamlit>=1.66

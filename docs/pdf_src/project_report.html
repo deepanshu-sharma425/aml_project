@@ -477,7 +477,7 @@
 <p>Correctness-critical properties are covered by 23 pytest unit tests, all passing (Appendix C). The most important ones guard against leakage: features must not change when future values are overwritten, forward-filling must be causal, and the scaler and weekly profile must use only the training period. Others check that the split is chronological and matches the literature sizes, that the graph has exactly 1,722 non-zeros and row-stochastic transition matrices, that windows align, that metrics ignore zero targets, and that every model produces correctly shaped outputs.</p>
 
 <h3>10.3 Interactive application</h3>
-<p>The trained Graph WaveNet is deployed in a Streamlit application (<code>app/streamlit_app.py</code>, run with <code>streamlit run app/streamlit_app.py</code>). It loads the dataset and checkpoint once, then replays the test period. A forecast settings form (date, time, sensor, map horizon, <em>Run forecast</em>) is complemented by quick actions: stepping by 5 minutes or 1 hour, jumping to the morning rush, midday, evening rush or night, an automatic <em>Play through the day</em> mode, and shortcuts to the slowest sensor, the sensor forecast to slow down most, the worst-forecast sensor or a random one. Each forecast is a single forward pass of about 6 ms on the GPU.</p>
+<p>The trained Graph WaveNet is deployed in a Streamlit application (<code>app/app.py</code>, run with <code>streamlit run app/app.py</code>). It loads the dataset and checkpoint once, then replays the test period. A forecast settings form (date, time, sensor, map horizon, <em>Run forecast</em>) is complemented by quick actions: stepping by 5 minutes or 1 hour, jumping to the morning rush, midday, evening rush or night, an automatic <em>Play through the day</em> mode, and shortcuts to the slowest sensor, the sensor forecast to slow down most, the worst-forecast sensor or a random one. Each forecast is a single forward pass of about 6 ms on the GPU.</p>
 <figure class="n"><img class="shot" src="img/app_live.png"><figcaption>Live forecast view: current speed and forecasts at the selected sensor, last hour and next hour (actual against forecast), and a map of all 207 sensors coloured by forecast congestion band.</figcaption></figure>
 <div class="row">
 <figure class="n"><img class="shot" src="img/app_day.png"><figcaption>Whole-day view: forecasts made 15 and 60 minutes earlier against the measured speed.</figcaption></figure>
@@ -587,7 +587,7 @@ python scripts/run_eda.py                # EDA figures and statistics
 python scripts/run_classical.py          # HA, Persistence, Ridge, gradient boosting (~40 min)
 bash scripts/run_deep_experiments.sh     # Graph WaveNet, LSTM, ablation (~4 h on an Apple M3)
 python scripts/evaluate.py               # tables, significance tests, figures
-streamlit run app/streamlit_app.py       # interactive application
+streamlit run app/app.py       # interactive application
 bash docs/pdf_src/build.sh               # rebuild these PDFs</code></pre>
 
 </body>

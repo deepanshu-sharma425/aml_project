@@ -133,7 +133,7 @@
   <!-- outputs -->
   <rect class="h" x="150" y="262" width="130" height="58" rx="6"/>
   <text class="t" x="215" y="284" text-anchor="middle">Web app</text>
-  <text class="s" x="215" y="300" text-anchor="middle">app/streamlit_app.py</text>
+  <text class="s" x="215" y="300" text-anchor="middle">app/app.py</text>
   <text class="s" x="215" y="313" text-anchor="middle">loads the checkpoint</text>
   <path class="l" d="M480,305 C400,345 300,340 282,305"/>
   <text class="s" x="390" y="355" text-anchor="middle" style="font-style:italic">checkpoints/gwnet_full_main.pt</text>
@@ -148,7 +148,7 @@
   <tr><td>3. Deep models</td><td><code>bash scripts/run_deep_experiments.sh</code></td><td>Graph WaveNet, LSTM and the Graph WaveNet ablation (~4 h on an Apple M3)</td></tr>
   <tr><td>4. Compare everything</td><td><code>python scripts/evaluate.py</code></td><td>Result tables (CSV + LaTeX), significance tests, figures</td></tr>
   <tr><td>5. Check correctness</td><td><code>pytest</code></td><td>23 unit tests (leakage, alignment, masking, shapes)</td></tr>
-  <tr><td>6. Use the model</td><td><code>streamlit run app/streamlit_app.py</code></td><td>Interactive forecast page at <code>localhost:8501</code></td></tr>
+  <tr><td>6. Use the model</td><td><code>streamlit run app/app.py</code></td><td>Interactive forecast page at <code>localhost:8501</code></td></tr>
 </table>
 
 <h2 class="newpage">4. How each part works</h2>
@@ -276,7 +276,7 @@
 </div>
 
 <h2>6. The interactive web app</h2>
-<p><code>app/streamlit_app.py</code> turns the trained Graph WaveNet into a page you can explore at <code>http://localhost:8501</code>. It is built with <strong>Streamlit</strong> (page and controls), <strong>Altair</strong> (interactive charts) and <strong>pydeck</strong> (the map).</p>
+<p><code>app/app.py</code> turns the trained Graph WaveNet into a page you can explore at <code>http://localhost:8501</code>. It is built with <strong>Streamlit</strong> (page and controls), <strong>Altair</strong> (interactive charts) and <strong>pydeck</strong> (the map).</p>
 <figure><img class="shot" src="img/app_live.png"><figcaption><b>Live forecast tab.</b> Left: forecast settings and quick actions. Top: current speed and the forecast 15, 30 and 60 minutes ahead at the chosen sensor. Bottom left: last hour (grey) and next hour (actual grey, forecast blue). Bottom right: every sensor on a street map, coloured by forecast congestion.</figcaption></figure>
 
 <h3>How it works</h3>
@@ -286,7 +286,7 @@
   <li><strong>Quick-action buttons</strong> apply immediately: step ±5 minutes or ±1 hour, jump to the morning rush, midday, evening rush or night, or let <em>Play through the day</em> advance the clock every second.</li>
   <li><strong>Find a sensor</strong> buttons pick the slowest sensor now, the one forecast to slow down most, the one with the worst forecast this hour, or a random one. You can also click any dot on the map.</li>
   <li><strong>Whole day</strong> shows the forecast made 15 and 60 minutes earlier against what happened, for every 5-minute step of the day.</li>
-  <li><strong>Model accuracy</strong> scores the model on the whole test set (about 15 seconds, once) and compares it with the baselines, by MAE, RMSE or MAPE.</li>
+  <li><strong>Model accuracy</strong> shows the saved test-set scores of Graph WaveNet and the baselines (from <code>results/metrics/</code>), by MAE, RMSE or MAPE.</li>
 </ol>
 <div class="row">
   <figure><img class="shot" src="img/app_day.png"><figcaption><b>Whole day tab.</b> Each point is a forecast made earlier, plotted against the measured speed.</figcaption></figure>
@@ -305,7 +305,7 @@
   <tr><td><code>scripts/</code></td><td>One entry point per experiment (see Section 3)</td></tr>
   <tr><td><code>tests/</code></td><td>23 pytest tests: no future leakage, split order, scaler fitted on train only, graph properties, masking, model shapes</td></tr>
   <tr><td><code>results/</code></td><td><code>metrics/</code> (JSON per model), <code>tables/</code>, <code>figures/</code>, <code>history/</code>, <code>logs/</code>, <code>predictions/</code> (not in git)</td></tr>
-  <tr><td><code>app/streamlit_app.py</code>, <code>.streamlit/config.toml</code></td><td>The web app and its theme</td></tr>
+  <tr><td><code>app/app.py</code>, <code>.streamlit/config.toml</code></td><td>The web app and its theme</td></tr>
   <tr><td><code>report/</code></td><td>IEEE-format LaTeX paper</td></tr>
   <tr><td><code>docs/</code></td><td>Literature review, viva preparation, these PDFs (sources in <code>docs/pdf_src/</code>)</td></tr>
   <tr><td><code>notebooks/01_eda.ipynb</code></td><td>Executed, narrated exploratory analysis</td></tr>

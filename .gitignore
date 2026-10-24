@@ -4,7 +4,8 @@ __pycache__/
 .ipynb_checkpoints/
 .pytest_cache/
 .DS_Store
-checkpoints/
+checkpoints/*
+!checkpoints/gwnet_full_main.pt
 report/*.aux
 report/*.log
 report/*.out

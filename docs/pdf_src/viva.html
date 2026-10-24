@@ -310,7 +310,7 @@
 <p>The full normalised series (34,272 × 207 × 2) is moved to the GPU once. A batch is built by indexing it with anchor offsets (<code>WindowSampler.batch</code>), so no Python loop or CPU-to-GPU copy happens per sample.</p></div></div>
 
 <div class="qa"><div class="q">How do I reproduce everything from scratch? <span class="chip core">core</span></div><div class="a">
-<p><code>pip install -e ".[dev]"</code>, then <code>python scripts/run_eda.py</code>, <code>python scripts/run_classical.py</code>, <code>bash scripts/run_deep_experiments.sh</code>, <code>python scripts/evaluate.py</code> and <code>pytest</code>. The app runs with <code>streamlit run app/streamlit_app.py</code>.</p></div></div>
+<p><code>pip install -e ".[dev]"</code>, then <code>python scripts/run_eda.py</code>, <code>python scripts/run_classical.py</code>, <code>bash scripts/run_deep_experiments.sh</code>, <code>python scripts/evaluate.py</code> and <code>pytest</code>. The app runs with <code>streamlit run app/app.py</code>.</p></div></div>
 
 <h2>J. The web application</h2>
 
@@ -318,7 +318,7 @@
 <p>It is a Streamlit page at localhost:8501. You pick a date, time and sensor and click Run forecast. It shows the current speed, forecasts for +15, +30 and +60 minutes, a chart of the last hour and the forecast against what actually happened, and a map of all 207 sensors coloured by forecast congestion. Buttons step through time, jump to rush hours, play through the day or pick interesting sensors. Two more tabs show the whole day and the test-set accuracy against the baselines.</p></div></div>
 
 <div class="qa"><div class="q">Does the app retrain the model? <span class="chip trick">tricky</span></div><div class="a">
-<p>No. It only does inference. On start-up it loads the dataset and the saved checkpoint once (<code>st.cache_resource</code>), and each forecast is a single forward pass on one window (about 6 ms on the GPU). The test-set accuracy table takes about 15 seconds the first time and is cached after that.</p></div></div>
+<p>No. It only does inference. On start-up it loads the dataset and the saved checkpoint once (<code>st.cache_resource</code>), and each forecast is a single forward pass on one window (about 6 ms on the laptop GPU, 16 ms on a CPU). The accuracy tab reads the saved test-set metrics, so nothing heavy is recomputed when the page opens.</p></div></div>
 
 <div class="qa"><div class="q">Is the app "real time"? <span class="chip trick">tricky</span></div><div class="a">
 <p>It replays the 2012 test period, so it is a realistic simulation, not a live feed. For live use you would stream current detector data (for example from Caltrans PeMS) into the same 12-step window and call the same model, which is fast enough to update every 5 minutes for the whole network.</p></div></div>

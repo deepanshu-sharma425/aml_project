@@ -1,12 +1,13 @@
-"""Local demo: Graph WaveNet speed forecasts on the METR-LA test period.
+"""Graph WaveNet speed forecasts on the METR-LA test period.
 
 Run from the repository root (so .streamlit/config.toml is picked up):
-    streamlit run app/streamlit_app.py
+    streamlit run app/app.py
 """
 from __future__ import annotations
 
 import datetime as dt
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -17,12 +18,16 @@ import pydeck as pdk
 import streamlit as st
 import torch
 
+# The traffic package lives in src/. Hosted deployments (e.g. Streamlit Community
+# Cloud) install requirements.txt but not the package itself, so import it from source.
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
 from traffic.data import DATA_DIR, load_metrla, transition_matrices
 from traffic.metrics import evaluate
 from traffic.models import GraphWaveNet
 from traffic.trainer import Trainer, pick_device
 
-ROOT = Path(__file__).resolve().parents[1]
 CKPT = ROOT / "checkpoints" / "gwnet_full_main.pt"
 # Fixed legend order = fixed categorical slot per model
 MODELS = {"gwnet": "Graph WaveNet", "hgb": "Gradient Boosting", "ridge": "Ridge",
@@ -58,17 +63,19 @@ def load():
     return data, trainer, locs
 
 
-@st.cache_data(show_spinner="Scoring the full test set (≈15 s, once)…")
+@st.cache_data(show_spinner="Loading test-set accuracy…")
 def test_set_metrics() -> dict[str, dict]:
-    data, trainer, _ = load()
-    test = data.split.test
-    pred = trainer.predict(test, batch_size=64)
-    y = data.speed[test[:, None] + np.arange(1, data.seq_out + 1)]
-    out = {"Graph WaveNet": evaluate(pred, y)}
+    """Saved test-set metrics per model; Graph WaveNet is re-scored only if its file is missing."""
+    out = {}
     for key, name in MODELS.items():
-        f = ROOT / "results" / "metrics" / f"{key}.json"
-        if key != "gwnet" and f.exists():
+        f = ROOT / "results" / "metrics" / f"{'gwnet_full_main' if key == 'gwnet' else key}.json"
+        if f.exists():
             out[name] = json.loads(f.read_text())["metrics"]
+    if "Graph WaveNet" not in out:
+        data, trainer, _ = load()
+        test = data.split.test
+        y = data.speed[test[:, None] + np.arange(1, data.seq_out + 1)]
+        out = {"Graph WaveNet": evaluate(trainer.predict(test, batch_size=64), y), **out}
     return out
 
 
