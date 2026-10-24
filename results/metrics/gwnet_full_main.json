@@ -1,0 +1,42 @@
+{
+  "model": "gwnet_full_main",
+  "params": 300952,
+  "epochs_run": 26,
+  "best_epoch": 25,
+  "best_val_mae": 2.809,
+  "train_sec": 8509.0,
+  "infer_sec": 15.87987494468689,
+  "note": "Run interrupted after epoch 26 of 35; outputs exported from the best-validation checkpoint.",
+  "args": {
+    "model": "gwnet",
+    "variant": "full",
+    "epochs": "35",
+    "patience": "8",
+    "lr": "0.001",
+    "batch_size": "32",
+    "seed": "0",
+    "tag": "main"
+  },
+  "metrics": {
+    "15 min": {
+      "MAE": 2.717369318008423,
+      "RMSE": 5.1814656257629395,
+      "MAPE": 7.024904251098633
+    },
+    "30 min": {
+      "MAE": 3.1038429737091064,
+      "RMSE": 6.237185955047607,
+      "MAPE": 8.517324447631836
+    },
+    "60 min": {
+      "MAE": 3.5868897438049316,
+      "RMSE": 7.421444416046143,
+      "MAPE": 10.35205078125
+    },
+    "avg": {
+      "MAE": 3.0738847255706787,
+      "RMSE": 6.209915637969971,
+      "MAPE": 8.4135103225708
+    }
+  }
+}

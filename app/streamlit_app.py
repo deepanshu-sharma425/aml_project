@@ -5,7 +5,9 @@ Run from the repository root (so .streamlit/config.toml is picked up):
 """
 from __future__ import annotations
 
+import datetime as dt
 import json
+import time
 from pathlib import Path
 
 import altair as alt
@@ -53,13 +55,12 @@ def load():
     trainer = Trainer(model, data, device=pick_device(), batch_size=64)
     locs = pd.read_csv(DATA_DIR / "graph_sensor_locations.csv", dtype={"sensor_id": str})
     locs = locs.set_index("sensor_id").loc[data.sensor_ids]
-    n_params = sum(p.numel() for p in model.parameters())
-    return data, trainer, locs, n_params
+    return data, trainer, locs
 
 
 @st.cache_data(show_spinner="Scoring the full test set (≈15 s, once)…")
 def test_set_metrics() -> dict[str, dict]:
-    data, trainer, _, _ = load()
+    data, trainer, _ = load()
     test = data.split.test
     pred = trainer.predict(test, batch_size=64)
     y = data.speed[test[:, None] + np.arange(1, data.seq_out + 1)]
@@ -141,43 +142,95 @@ def series_chart(wide: pd.DataFrame, now: pd.Timestamp, height: int, shade_until
     return alt.layer(*layers).properties(height=height).configure_view(stroke=None)
 
 
-data, trainer, locs, n_params = load()
+data, trainer, locs = load()
 pal = PALETTE["dark" if st.context.theme.type == "dark" else "light"]
 test = data.split.test
 test_times = data.index[test]
 
-# ---------------------------------------------------------------- sensor selection (map click → selectbox)
-if "sensor" not in st.session_state:
-    st.session_state.sensor = int(np.argmax(data.speed[test].std(axis=0)))
+
+@st.cache_data(show_spinner=False)
+def day_forecasts(day: dt.date) -> tuple[np.ndarray, np.ndarray]:
+    anchors = test[test_times.date == day]
+    return anchors, trainer.predict(anchors)
+
+
+def nearest_pos(day: dt.date, tod: dt.time) -> int:
+    """Index into the test anchors of the forecast time closest to day + tod."""
+    return int(test_times.get_indexer([pd.Timestamp.combine(day, tod)], method="nearest")[0])
+
+
+def go_to(ts: pd.Timestamp) -> None:
+    st.session_state.day, st.session_state.tod = ts.date(), ts.time()
+
+
+def step(k: int) -> None:
+    go_to(test_times[int(np.clip(st.session_state.pos + k, 0, len(test_times) - 1))])
+
+
+def preset(tod: dt.time) -> None:
+    go_to(test_times[nearest_pos(st.session_state.day, tod)])
+
+
+def pick_sensor(i: int) -> None:
+    st.session_state.sensor = i
+
+
+# ---------------------------------------------------------------- state (defaults, play, map click)
+if "day" not in st.session_state:
+    st.session_state.update(day=dt.date(2012, 6, 4), tod=dt.time(16, 30), horizon=12,
+                            sensor=int(np.argmax(data.speed[test].std(axis=0))))
+if "jump" in st.session_state:                      # set by the player at the end of the last run
+    go_to(st.session_state.pop("jump"))
 clicked = (st.session_state.get("map") or {}).get("selection", {}).get("objects", {}).get("sensors", [])
 if clicked and clicked[0]["idx"] != st.session_state.get("last_click"):
     st.session_state.sensor = st.session_state.last_click = clicked[0]["idx"]
 
-# ---------------------------------------------------------------- sidebar
+# ---------------------------------------------------------------- sidebar: settings form + quick actions
+first, last = test_times[0].date(), test_times[-1].date()
 with st.sidebar:
     st.markdown("### 🚦 Forecast settings")
-    st.markdown("**When**")
-    days = sorted(set(test_times.date))
-    day = st.selectbox("Date", days, format_func=lambda d: d.strftime("%a %d %b %Y"))
-    day_times = test_times[test_times.date == day]
-    # Default to 16:30, the start of the evening slowdown, when the day has it
-    default = next((t for t in day_times if (t.hour, t.minute) == (16, 30)), day_times[len(day_times) // 2])
-    t_now = st.select_slider("Forecast made at", options=list(day_times), value=default,
-                             format_func=lambda t: t.strftime("%H:%M"))
-    st.markdown("**Where**")
-    sensor = st.selectbox("Sensor", range(data.num_nodes), key="sensor",
-                          format_func=lambda i: f"{data.sensor_ids[i]}")
-    st.caption("Tip: click any sensor on the map to select it.")
-    st.markdown("**Map**")
-    horizon = st.select_slider("Show network", options=list(range(1, 13)), value=12,
-                               format_func=lambda h: f"+{h * 5} min")
-    st.divider()
-    st.caption(f"**Model** Graph WaveNet · {n_params:,} parameters  \n"
-               f"**Checkpoint** `{CKPT.name}`  \n**Device** `{trainer.device}`  \n"
-               f"**Data** METR-LA, {data.num_nodes} loop detectors, 5-min speeds")
+    with st.form("settings", border=True):
+        st.date_input("Date", min_value=first, max_value=last, key="day", format="DD/MM/YYYY",
+                      help=f"Test period: {first:%d %b} – {last:%d %b %Y}")
+        st.slider("Time of day", min_value=dt.time(0, 0), max_value=dt.time(23, 55),
+                  step=dt.timedelta(minutes=5), format="HH:mm", key="tod")
+        st.selectbox("Sensor", range(data.num_nodes), key="sensor",
+                     format_func=lambda i: f"{data.sensor_ids[i]}", help="Or click a sensor on the map.")
+        st.select_slider("Network map shows", options=list(range(1, 13)), key="horizon",
+                         format_func=lambda h: f"+{h * 5} min")
+        submitted = st.form_submit_button("Run forecast", type="primary", icon=":material/play_arrow:",
+                                          width="stretch")
+
+    pos = nearest_pos(st.session_state.day, st.session_state.tod)
+    st.session_state.pos = pos
+    t_now = test_times[pos]
+    sensor, horizon = st.session_state.sensor, st.session_state.horizon
+    if submitted:
+        st.toast(f"Forecast updated · {t_now:%a %d %b, %H:%M} · sensor {data.sensor_ids[sensor]}", icon="✅")
+    if t_now != pd.Timestamp.combine(st.session_state.day, st.session_state.tod):
+        st.caption(f"No data at that time, so showing the nearest: **{t_now:%d %b %H:%M}**")
+
+    st.markdown("**Step through time**")
+    b = st.columns(2, gap="small")
+    for i, (label, icon, k) in enumerate([("5 min", ":material/chevron_left:", -1),
+                                          ("5 min", ":material/chevron_right:", 1),
+                                          ("1 hour", ":material/keyboard_double_arrow_left:", -12),
+                                          ("1 hour", ":material/keyboard_double_arrow_right:", 12)]):
+        b[i % 2].button(label, icon=icon, on_click=step, args=(k,), width="stretch", key=f"step{k}",
+                        help=f"{'Back' if k < 0 else 'Forward'} {label}")
+    st.markdown("**Jump to**")
+    j = st.columns(2, gap="small")
+    for i, (label, icon, tod, what) in enumerate([
+            ("Morning", ":material/wb_twilight:", dt.time(8, 0), "morning rush"),
+            ("Midday", ":material/light_mode:", dt.time(12, 30), "midday"),
+            ("Evening", ":material/traffic:", dt.time(17, 30), "evening rush"),
+            ("Night", ":material/dark_mode:", dt.time(23, 0), "night")]):
+        j[i % 2].button(label, icon=icon, on_click=preset, args=(tod,), width="stretch",
+                        help=f"{tod:%H:%M}, {what}, same date")
+    st.toggle("Play through the day", key="playing", help="Advance the forecast 5 minutes every second.")
 
 # ---------------------------------------------------------------- live prediction
-anchor = int(test[test_times.get_loc(t_now)])
+anchor = int(test[pos])
 pred = trainer.predict(np.array([anchor]))[0]                      # (12, N)
 past = data.speed[anchor - data.seq_in + 1: anchor + 1]             # (12, N)
 future = data.speed[anchor + 1: anchor + data.seq_out + 1]          # (12, N)
@@ -190,6 +243,23 @@ mae_s = float(np.abs(pred[ms, sensor] - future[ms, sensor]).mean()) if ms.any() 
 m = future > 0
 mae_all = float(np.abs(pred[m] - future[m]).mean())
 congested = int((pred[horizon - 1] < 40).sum())
+
+with st.sidebar:
+    st.markdown("**Find a sensor**")
+    observed = past[-1] > 0
+    slowest = int(np.argmin(np.where(observed, past[-1], np.inf)))
+    drop = int(np.argmax(np.where(observed, past[-1] - pred[-1], -np.inf)))
+    err = np.where(m, np.abs(pred - future), np.nan)
+    worst = int(np.nanargmax(np.nanmean(np.where(m.any(0), err, 0), 0)))
+    rnd = int(np.random.default_rng(pos).integers(data.num_nodes))
+    s = st.columns(2, gap="small")
+    s[0].button("Slowest", icon=":material/speed:", on_click=pick_sensor, args=(slowest,), width="stretch",
+                help=f"Sensor {data.sensor_ids[slowest]}: {past[-1, slowest]:.0f} mph right now")
+    s[1].button("Slowing", icon=":material/trending_down:", on_click=pick_sensor, args=(drop,), width="stretch",
+                help=f"Sensor {data.sensor_ids[drop]}: forecast to slow by {past[-1, drop] - pred[-1, drop]:.0f} mph")
+    s[0].button("Worst", icon=":material/error:", on_click=pick_sensor, args=(worst,), width="stretch",
+                help=f"Sensor {data.sensor_ids[worst]}: largest error over the next hour")
+    s[1].button("Random", icon=":material/shuffle:", on_click=pick_sensor, args=(rnd,), width="stretch")
 
 # ---------------------------------------------------------------- header
 st.markdown("## Los Angeles freeway speed forecast")
@@ -256,8 +326,8 @@ with forecast_tab:
             for name, lo, c in BANDS), unsafe_allow_html=True)
 
 with day_tab:
-    day_anchors = test[test_times.date == day]
-    day_pred = trainer.predict(day_anchors)
+    day = t_now.date()
+    day_anchors, day_pred = day_forecasts(day)
     st.markdown(f"**Sensor {data.sensor_ids[sensor]}** · {day:%A %d %B} · each point is a forecast made "
                 f"15 or 60 minutes earlier, against what was measured")
     for h in (2, 11):
@@ -309,3 +379,8 @@ with acc_tab:
     st.markdown(f"**{metric} ({unit[metric]})** · best per column in bold")
     st.dataframe(table.style.format("{:.3f}").highlight_min(axis=0, props="font-weight:700"),
                  width="stretch")
+
+if st.session_state.playing and pos + 1 < len(test_times):
+    time.sleep(1.0)
+    st.session_state.jump = test_times[pos + 1]
+    st.rerun()

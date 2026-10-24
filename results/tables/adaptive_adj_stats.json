@@ -1,0 +1,7 @@
+{
+  "top5_overlap_with_road_graph": 0.03091787439613527,
+  "road_graph_density": 0.035356717776377514,
+  "lift_over_random": 0.8744554455445545,
+  "mean_entropy_rows": 5.230874538421631,
+  "max_entropy": 5.332718793265369
+}
