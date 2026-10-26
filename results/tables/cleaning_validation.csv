@@ -1,0 +1,13 @@
+check,passed,detail
+timestamps strictly increasing,True,0 duplicates
+regular 5-minute grid,True,0 irregular steps
+columns match graph sensor order,True,207 columns
+no duplicate sensors,True,0 duplicates
+speeds finite,True,0 NaN/inf
+"speeds within [0, 70] mph",True,0 out of range
+every sensor has a location,True,0 missing
+locations unique and complete,True,207 rows
+coordinates inside Los Angeles,True,
+road distances non-negative,True,0 negative
+no duplicate road distances,True,0 duplicates
+distances between graph sensors,True,11753 of 295374 rows

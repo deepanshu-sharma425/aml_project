@@ -23,6 +23,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from traffic import cleaning as C
 from traffic.data import DATA_DIR, load_metrla, transition_matrices
 from traffic.metrics import evaluate
 from traffic.models import GraphWaveNet
@@ -77,6 +78,19 @@ def test_set_metrics() -> dict[str, dict]:
         y = data.speed[test[:, None] + np.arange(1, data.seq_out + 1)]
         out = {"Graph WaveNet": evaluate(trainer.predict(test, batch_size=64), y), **out}
     return out
+
+
+@st.cache_resource(show_spinner="Checking and cleaning the data…")
+def data_quality() -> tuple[C.CleanResult, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Cleaned copy of the speeds (for display only; the model reads the raw data with zeros masked)."""
+    data, _, locs = load()
+    res = C.clean(data.speed, data.index, data.train_end)
+    checks = C.validate(pd.DataFrame(data.speed, index=data.index, columns=data.sensor_ids), data.sensor_ids,
+                        locs.reset_index(), pd.read_csv(DATA_DIR / "distances_la_2012.csv",
+                                                        dtype={"from": str, "to": str}))
+    f = ROOT / "results" / "tables" / "imputation_benchmark.csv"
+    bench = pd.read_csv(f) if f.exists() else C.imputation_benchmark(res, data.index, data.train_end)
+    return res, pd.DataFrame(checks), C.sensor_quality(res, data.sensor_ids), bench
 
 
 def band(speed: float) -> tuple[str, str]:
@@ -275,7 +289,7 @@ st.markdown(
     f"**{t_now:%A %d %B %Y, %H:%M}** · next 60 minutes · {data.num_nodes} sensors</span>",
     unsafe_allow_html=True)
 
-forecast_tab, day_tab, acc_tab = st.tabs(["Live forecast", "Whole day", "Model accuracy"])
+forecast_tab, day_tab, acc_tab, dq_tab = st.tabs(["Live forecast", "Whole day", "Model accuracy", "Data quality"])
 
 with forecast_tab:
     k = st.columns(5)
@@ -386,6 +400,91 @@ with acc_tab:
     st.markdown(f"**{metric} ({unit[metric]})** · best per column in bold")
     st.dataframe(table.style.format("{:.3f}").highlight_min(axis=0, props="font-weight:700"),
                  width="stretch")
+
+with dq_tab:
+    clean, checks, quality, bench = data_quality()
+    counts = clean.counts()
+    flagged = 100 * (1 - counts["valid"] / counts["cells"])
+    st.caption("A validated, cleaned copy of the data for analysis. The model itself reads the raw readings "
+               "with missing values masked, the standard METR-LA protocol, so its scores stay comparable "
+               "with published results.")
+    k = st.columns(4)
+    k[0].metric("Integrity checks passed", f"{int(checks.passed.sum())} / {len(checks)}", border=True,
+                help="Timestamps, 5-minute grid, sensor order, value range, locations and road distances.")
+    k[1].metric("Readings flagged", f"{flagged:.2f}%", border=True,
+                help=f"{counts['cells'] - counts['valid']:,} of {counts['cells']:,} readings")
+    k[2].metric("Network-wide outages", f"{int(C.detect_outages(data.speed).sum()):,} steps", border=True,
+                help="Time steps at which every sensor reported 0 mph.")
+    k[3].metric("Glitches removed", f"{counts['issues']['spike'] + counts['issues']['stuck']:,}", border=True,
+                help=f"{counts['issues']['spike']:,} one-step spikes (Hampel filter) and "
+                     f"{counts['issues']['stuck']:,} stuck-sensor repeats.")
+
+    with st.container(border=True):
+        day = t_now.date()
+        rows = np.flatnonzero(data.index.date == day)
+        st.markdown(f"**Sensor {data.sensor_ids[sensor]}** · {day:%A %d %B} · raw readings vs. cleaned series")
+        iss = clean.issue[rows, sensor]
+        wide = pd.DataFrame({"time": utc(data.index[rows]), "Raw": np.where(iss == C.OK, data.speed[rows, sensor], np.nan),
+                             "Cleaned": clean.speed[rows, sensor],
+                             "issue": [C.ISSUES.get(int(c), "valid") for c in iss],
+                             "fill": [C.FILLS[int(c)] for c in clean.filled[rows, sensor]]})
+        long = wide.melt(["time", "issue", "fill"], ["Cleaned", "Raw"], "series", "speed").dropna()
+        color = alt.Color("series:N", title=None, legend=alt.Legend(orient="top", labelColor=pal["muted"]),
+                          scale=alt.Scale(domain=["Cleaned", "Raw"], range=[pal["forecast"], pal["actual"]]))
+        lines = alt.Chart(long).mark_line(strokeWidth=2).encode(x=clock_axis(), y=speed_axis(0, 75), color=color)
+        bad = wide[wide.issue != "valid"].assign(speed=data.speed[rows, sensor][iss != C.OK])
+        marks = alt.Chart(bad).mark_point(shape="cross", size=40, color=pal["series"][1], filled=True).encode(
+            x=clock_axis(), y=speed_axis(0, 75),
+            tooltip=[alt.Tooltip("time:T", format="%H:%M", title="Time"), alt.Tooltip("speed:Q", title="Raw (mph)"),
+                     alt.Tooltip("issue:N", title="Issue"), alt.Tooltip("fill:N", title="Filled by")])
+        st.altair_chart(alt.layer(lines, marks).properties(height=260).configure_view(stroke=None), width="stretch")
+        n_bad = int((iss != C.OK).sum())
+        st.caption(f"{n_bad} of {len(rows)} readings flagged this day (orange crosses). "
+                   "Gaps up to 1 hour are filled by linear interpolation, longer ones by the sensor's "
+                   "usual speed for that time of week, learned from the training period only.")
+
+    a, b = st.columns(2, gap="medium")
+    with a, st.container(border=True):
+        st.markdown("**Readings flagged, by issue**")
+        names = {"outage": "Network outage", "missing": "Sensor missing", "spike": "Spike",
+                 "stuck": "Stuck sensor", "out_of_range": "Out of range"}
+        bars = pd.DataFrame({"issue": list(names.values()),
+                             "count": [counts["issues"][n] for n in names],
+                             "pct": [counts["issues_pct"][n] for n in names]})
+        st.altair_chart(alt.Chart(bars).mark_bar(color=pal["forecast"], cornerRadiusEnd=3).encode(
+            x=alt.X("pct:Q", title="Share of all readings (%)",
+                    axis=alt.Axis(labelColor=pal["muted"], titleColor=pal["muted"], gridColor=pal["grid"])),
+            y=alt.Y("issue:N", sort=None, title=None, axis=alt.Axis(labelColor=pal["muted"], ticks=False, domain=False)),
+            tooltip=[alt.Tooltip("issue:N", title="Issue"), alt.Tooltip("count:Q", format=",", title="Readings"),
+                     alt.Tooltip("pct:Q", format=".3f", title="Share (%)")])
+            .properties(height=220).configure_view(stroke=None), width="stretch")
+    with b, st.container(border=True):
+        st.markdown("**Imputation error on hidden gaps** · validation + test period")
+        methods = ["hybrid (ours)", "linear", "weekly_profile", "forward_fill"]
+        bl = bench[bench.method.isin(methods)]
+        st.altair_chart(alt.Chart(bl).mark_line(point=True).encode(
+            x=alt.X("gap_minutes:Q", title="Gap length (minutes, log scale)", scale=alt.Scale(type="log"),
+                    axis=alt.Axis(values=sorted(bl.gap_minutes.unique()), labelColor=pal["muted"],
+                                  titleColor=pal["muted"], grid=False)),
+            y=alt.Y("MAE:Q", title="MAE (mph)", axis=alt.Axis(labelColor=pal["muted"], titleColor=pal["muted"],
+                                                               gridColor=pal["grid"])),
+            color=alt.Color("method:N", title=None, sort=methods, legend=alt.Legend(orient="top", labelColor=pal["muted"]),
+                            scale=alt.Scale(domain=methods, range=pal["series"][:4])),
+            strokeWidth=alt.condition(alt.datum.method == "hybrid (ours)", alt.value(3), alt.value(1.5)),
+            tooltip=[alt.Tooltip("method:N", title="Method"), alt.Tooltip("gap_minutes:Q", title="Gap (min)"),
+                     alt.Tooltip("MAE:Q", format=".2f", title="MAE (mph)")])
+            .properties(height=220).configure_view(stroke=None), width="stretch")
+
+    c, q = st.columns([2, 3], gap="medium")
+    with c:
+        st.markdown("**Integrity checks**")
+        st.dataframe(checks.assign(passed=checks.passed.map({True: "✅", False: "❌"})),
+                     hide_index=True, width="stretch")
+    with q:
+        st.markdown("**Least reliable sensors** · share of readings flagged")
+        st.dataframe(quality[["sensor_id", "flagged_pct", "missing_pct", "spike_pct", "stuck_pct",
+                              "longest_gap_hours"]].head(15).style.format(precision=2),
+                     hide_index=True, width="stretch")
 
 if st.session_state.playing and pos + 1 < len(test_times):
     time.sleep(1.0)

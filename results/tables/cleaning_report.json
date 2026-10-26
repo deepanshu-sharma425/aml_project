@@ -1,0 +1,180 @@
+{
+  "config": {
+    "speed_cap": 70.0,
+    "stuck_min_steps": 12,
+    "spike_window": 7,
+    "spike_k": 5.0,
+    "spike_min_mph": 20.0,
+    "max_interp_steps": 12
+  },
+  "validation": [
+    {
+      "check": "timestamps strictly increasing",
+      "passed": true,
+      "detail": "0 duplicates"
+    },
+    {
+      "check": "regular 5-minute grid",
+      "passed": true,
+      "detail": "0 irregular steps"
+    },
+    {
+      "check": "columns match graph sensor order",
+      "passed": true,
+      "detail": "207 columns"
+    },
+    {
+      "check": "no duplicate sensors",
+      "passed": true,
+      "detail": "0 duplicates"
+    },
+    {
+      "check": "speeds finite",
+      "passed": true,
+      "detail": "0 NaN/inf"
+    },
+    {
+      "check": "speeds within [0, 70] mph",
+      "passed": true,
+      "detail": "0 out of range"
+    },
+    {
+      "check": "every sensor has a location",
+      "passed": true,
+      "detail": "0 missing"
+    },
+    {
+      "check": "locations unique and complete",
+      "passed": true,
+      "detail": "207 rows"
+    },
+    {
+      "check": "coordinates inside Los Angeles",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "road distances non-negative",
+      "passed": true,
+      "detail": "0 negative"
+    },
+    {
+      "check": "no duplicate road distances",
+      "passed": true,
+      "detail": "0 duplicates"
+    },
+    {
+      "check": "distances between graph sensors",
+      "passed": true,
+      "detail": "11753 of 295374 rows"
+    }
+  ],
+  "counts": {
+    "cells": 7094304,
+    "valid": 6512586,
+    "issues": {
+      "out_of_range": 0,
+      "outage": 444636,
+      "missing": 130666,
+      "stuck": 274,
+      "spike": 6142
+    },
+    "issues_pct": {
+      "out_of_range": 0.0,
+      "outage": 6.26750700280112,
+      "missing": 1.841843822875366,
+      "stuck": 0.0038622534359959767,
+      "spike": 0.08657649855433316
+    },
+    "fills": {
+      "original": 6512586,
+      "linear": 68069,
+      "weekly_profile": 513649
+    },
+    "fills_pct": {
+      "original": 91.80021042233318,
+      "linear": 0.9594880625358033,
+      "weekly_profile": 7.240301515131012
+    }
+  },
+  "complete_time_steps": {
+    "raw": 5206,
+    "clean": 34272
+  },
+  "raw_observed": {
+    "mean": 58.45972442626953,
+    "std": 13.023601531982422,
+    "min": 0.3333333432674408,
+    "median": 63.22222137451172,
+    "max": 70.0
+  },
+  "clean_all": {
+    "mean": 58.557315826416016,
+    "std": 12.80467414855957,
+    "min": 0.3333333432674408,
+    "median": 63.125,
+    "max": 70.0
+  },
+  "clean_valid_only": {
+    "mean": 58.483612060546875,
+    "std": 13.000321388244629,
+    "min": 0.3333333432674408,
+    "median": 63.22222137451172,
+    "max": 70.0
+  },
+  "sensors_over_15pct_flagged": [
+    "718076",
+    "716939",
+    "760987",
+    "716955",
+    "769418",
+    "769405",
+    "717481",
+    "717510"
+  ],
+  "imputation_mae": {
+    "5": {
+      "forward_fill": 2.572,
+      "hybrid (ours)": 2.195,
+      "linear": 2.195,
+      "weekly_profile": 3.957
+    },
+    "15": {
+      "forward_fill": 3.095,
+      "hybrid (ours)": 2.543,
+      "linear": 2.543,
+      "weekly_profile": 4.385
+    },
+    "30": {
+      "forward_fill": 3.349,
+      "hybrid (ours)": 2.726,
+      "linear": 2.726,
+      "weekly_profile": 4.221
+    },
+    "60": {
+      "forward_fill": 4.05,
+      "hybrid (ours)": 3.104,
+      "linear": 3.104,
+      "weekly_profile": 4.173
+    },
+    "180": {
+      "forward_fill": 5.799,
+      "hybrid (ours)": 4.115,
+      "linear": 4.268,
+      "weekly_profile": 4.115
+    },
+    "720": {
+      "forward_fill": 8.757,
+      "hybrid (ours)": 3.935,
+      "linear": 7.118,
+      "weekly_profile": 3.935
+    },
+    "1440": {
+      "forward_fill": 8.952,
+      "hybrid (ours)": 3.991,
+      "linear": 8.557,
+      "weekly_profile": 3.991
+    }
+  },
+  "output_file": "Dataset/cleaned/METR-LA_clean.h5"
+}

@@ -13,6 +13,7 @@ leakage-tested feature engineering and statistical significance testing.
 Dataset/                 METR-LA speeds (HDF5), sensor ids, locations, road distances
 src/traffic/             installable Python package
   data.py                loading, Gaussian-kernel graph, chronological split, scaler
+  cleaning.py            integrity checks, outage/stuck/spike detection, imputation, quality report
   features.py            34 causal features in 6 groups (lags, window, calendar, profile, spatial, sensor)
   metrics.py             masked MAE / RMSE / MAPE, Diebold-Mariano test
   models/                baselines, per-horizon tabular wrapper, LSTM, Graph WaveNet
@@ -20,11 +21,12 @@ src/traffic/             installable Python package
   eda.py, plotting.py    EDA statistics/figures and shared plot style
 scripts/
   run_eda.py             EDA figures + results/tables/eda_stats.json
+  clean_data.py          validate + clean the data, cleaned HDF5, quality tables and figures
   run_classical.py       HA, Persistence, Ridge, gradient boosting, feature ablation, importances
   train_deep.py          train one deep model (LSTM or a Graph WaveNet variant)
   run_deep_experiments.sh  all deep runs, sequentially
   evaluate.py            result tables (CSV + LaTeX), DM tests, bootstrap CIs, result figures
-tests/                   pytest suite: leakage, alignment, masking, graph, shapes
+tests/                   pytest suite: leakage, alignment, masking, graph, shapes, cleaning
 notebooks/01_eda.ipynb   executed, narrated exploratory analysis
 results/                 metrics/ (JSON per model), tables/, figures/, history/, logs/
 report/                  IEEE-format LaTeX paper (main.tex, sections/, refs.bib, main.pdf)
@@ -37,9 +39,10 @@ presentation/            slide deck link / export
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"            # or: pip install -r requirements.txt && pip install -e .
-pytest                             # 23 unit tests, a few seconds
+pytest                             # 32 unit tests, a few seconds
 
 python scripts/run_eda.py          # EDA figures and statistics       (~1 min)
+python scripts/clean_data.py       # data validation, cleaning, quality report (~15 s)
 python scripts/run_classical.py    # baselines + feature models        (~40 min, CPU)
 bash scripts/run_deep_experiments.sh   # LSTM, Graph WaveNet, ablation (~4 h on Apple M3 / MPS)
 python scripts/evaluate.py         # tables, significance tests, figures
@@ -69,12 +72,41 @@ the scripts above.
   Graph WaveNet spatial ablation, and error analysis by horizon, hour, sensor and
   missing input.
 
+## Data validation and cleaning
+
+`python scripts/clean_data.py` checks the raw files and writes a cleaned copy to
+`Dataset/cleaned/METR-LA_clean.h5`. That file is git-ignored and regenerated in
+about 15 seconds. It stores the cleaned speeds plus a per-reading issue code and
+fill code (load it with `traffic.cleaning.load_clean()`).
+
+| Step | Rule | Readings |
+|---|---|---|
+| Integrity checks | 5-min grid, sensor order, value range, locations, distances | 12 / 12 pass |
+| Network outage | all 207 sensors read 0 at once (2,148 steps) | 6.27 % |
+| Sensor missing | single sensor reads 0 | 1.84 % |
+| Spike | Hampel filter: > 5 robust SD **and** > 20 mph from the 35-min median | 0.09 % (6,142) |
+| Stuck sensor | same value below the 70 mph cap for ≥ 1 h | 274 |
+| Imputation | linear for gaps ≤ 1 h, the sensor's weekly profile (training data only) beyond | 1.0 % / 7.2 % |
+
+Readings that pass every check are never changed. Constant 70 mph runs at night
+(free flow at the sensor cap) and sustained very low speeds (real jams) are kept.
+The imputation rule was chosen by hiding random blocks of valid readings and
+comparing forward fill, linear interpolation and the weekly profile
+(`results/figures/clean_imputation_benchmark.png`). Linear is best up to 1 h, and
+the profile is far better for long gaps (4.0 vs 8.6 mph MAE at 24 h).
+
+The forecasting models still read the **raw** data with missing targets masked.
+Interpolation uses future values, and imputed test targets would make the scores
+incomparable with DCRNN / Graph WaveNet. The cleaned data feeds the quality report,
+the figures and the app's *Data quality* tab.
+
 ## Phase 1 rubric map
 
 | Criterion | Where |
 |---|---|
 | Literature review | `docs/literature_review.md`, report §II |
 | Dataset quality & EDA | `notebooks/01_eda.ipynb`, `results/figures/eda_*`, report §III |
+| Data cleaning | `src/traffic/cleaning.py`, `scripts/clean_data.py`, `results/figures/clean_*`, `results/tables/cleaning_report.json`, app *Data quality* tab |
 | Feature engineering | `src/traffic/features.py`, `results/figures/fe_*`, report §IV |
 | Theoretical rigour | report §V (formulation, graph, models, statistical tests) |
 | Model application | `src/traffic/models/`, `scripts/`, report §VI–VII |

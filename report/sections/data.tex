@@ -47,6 +47,34 @@ distribution of per-sensor missing rates.}
 \label{fig:missing}
 \end{figure*}
 
+\subsection{Validation and cleaning}
+\texttt{scripts/clean\_data.py} first runs 12 integrity checks on the raw files
+(monotone 5-minute grid, sensor order, value range, coordinates, distances);
+all pass. It then assigns each reading at most one issue code: \emph{network
+outage} (all 207 sensors read 0; 2,148 steps, 6.27\,\% of readings),
+\emph{missing} (a single sensor reads 0; 1.84\,\%), \emph{stuck} (an identical
+reading below the 70\,mph cap repeated for ${\geq}1$\,h; 274 readings, e.g.\
+64\,mph for 7\,h) and \emph{spike} (Hampel filter, window 7, $|x-\tilde x|>5\cdot
+1.4826\,\mathrm{MAD}$ and ${>}20$\,mph; 6,142 readings, 0.09\,\%). Constant runs at
+the cap are night-time free flow and are kept, as are sustained low speeds, which
+are real congestion. Flagged readings are imputed by linear interpolation for gaps
+of up to 1\,h and by the sensor's weekly profile (fitted on training data) for
+longer gaps. We validated this rule by hiding 2,000 random blocks of valid readings
+per gap length in the validation and test period (Fig.~\ref{fig:clean}).
+Interpolation is best up to 1\,h (MAE 2.2--3.1\,mph), while beyond 3\,h the profile
+is clearly better (4.0 vs.\ 8.6\,mph at 24\,h). The cleaned series serves analysis
+and the demo app. The models still read the raw data with zero targets masked,
+because interpolation uses future values and imputed targets would make our scores
+incomparable with published results.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{clean_imputation_benchmark.png}
+\caption{Imputation error on artificially hidden gaps. The hybrid rule (linear
+for gaps ${\leq}1$\,h, weekly profile otherwise) is the best method at every length.}
+\label{fig:clean}
+\end{figure}
+
 \subsection{Temporal structure}
 Weekday speeds show a pronounced evening rush hour (network mean 45.2\,mph at
 17:30) and a weaker morning dip, while weekends are flat (minimum 56.8\,mph;

@@ -1,0 +1,29 @@
+gap_steps,gap_minutes,method,MAE,n
+1,5,forward_fill,2.5724,2000
+1,5,linear,2.1954,2000
+1,5,weekly_profile,3.9569,2000
+1,5,hybrid (ours),2.1954,2000
+3,15,forward_fill,3.095,2000
+3,15,linear,2.543,2000
+3,15,weekly_profile,4.3853,2000
+3,15,hybrid (ours),2.543,2000
+6,30,forward_fill,3.3488,2000
+6,30,linear,2.7263,2000
+6,30,weekly_profile,4.2214,2000
+6,30,hybrid (ours),2.7263,2000
+12,60,forward_fill,4.0504,2000
+12,60,linear,3.1037,2000
+12,60,weekly_profile,4.1726,2000
+12,60,hybrid (ours),3.1037,2000
+36,180,forward_fill,5.7989,2000
+36,180,linear,4.2679,2000
+36,180,weekly_profile,4.1153,2000
+36,180,hybrid (ours),4.1153,2000
+144,720,forward_fill,8.7567,2000
+144,720,linear,7.1185,2000
+144,720,weekly_profile,3.9351,2000
+144,720,hybrid (ours),3.9351,2000
+288,1440,forward_fill,8.9524,2000
+288,1440,linear,8.5573,2000
+288,1440,weekly_profile,3.9911,2000
+288,1440,hybrid (ours),3.9911,2000
