@@ -115,7 +115,7 @@ For a 24-hour gap the weekly profile was much better (4.0 vs 8.6 mph error).
 
 The models themselves still train on the raw data with missing values masked. If we
 tested on interpolated values, our scores couldn't be compared with the papers. The
-cleaned copy is used for the quality report, the figures and the app's Data quality tab.
+cleaned copy is used for the quality report and the figures.
 
 One gotcha: `METR-LA.h5` was written with a very old pandas (0.15), and current pandas
 can't read it, so `src/traffic/data.py` reads it directly with h5py.

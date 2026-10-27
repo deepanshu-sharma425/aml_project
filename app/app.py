@@ -80,17 +80,11 @@ def test_set_metrics() -> dict[str, dict]:
     return out
 
 
-@st.cache_resource(show_spinner="Checking and cleaning the data…")
-def data_quality() -> tuple[C.CleanResult, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Cleaned copy of the speeds (for display only; the model reads the raw data with zeros masked)."""
-    data, _, locs = load()
-    res = C.clean(data.speed, data.index, data.train_end)
-    checks = C.validate(pd.DataFrame(data.speed, index=data.index, columns=data.sensor_ids), data.sensor_ids,
-                        locs.reset_index(), pd.read_csv(DATA_DIR / "distances_la_2012.csv",
-                                                        dtype={"from": str, "to": str}))
-    f = ROOT / "results" / "tables" / "imputation_benchmark.csv"
-    bench = pd.read_csv(f) if f.exists() else C.imputation_benchmark(res, data.index, data.train_end)
-    return res, pd.DataFrame(checks), C.sensor_quality(res, data.sensor_ids), bench
+@st.cache_resource(show_spinner="Filling gaps in the readings…")
+def cleaned() -> C.CleanResult:
+    """Cleaned speeds for display only; the model still reads the raw data with zeros masked."""
+    data, _, _ = load()
+    return C.clean(data.speed, data.index, data.train_end)
 
 
 def band(speed: float) -> tuple[str, str]:
@@ -102,12 +96,6 @@ def band(speed: float) -> tuple[str, str]:
 
 def hex_rgb(h: str) -> list[int]:
     return [int(h[i:i + 2], 16) for i in (1, 3, 5)]
-
-
-def nan_missing(x: np.ndarray) -> np.ndarray:
-    x = x.astype(float).copy()
-    x[x == 0] = np.nan
-    return x
 
 
 def utc(t):
@@ -253,25 +241,26 @@ with st.sidebar:
 # ---------------------------------------------------------------- live prediction
 anchor = int(test[pos])
 pred = trainer.predict(np.array([anchor]))[0]                      # (12, N)
-past = data.speed[anchor - data.seq_in + 1: anchor + 1]             # (12, N)
-future = data.speed[anchor + 1: anchor + data.seq_out + 1]          # (12, N)
+# Everything shown comes from the cleaned series (no gaps); the model itself still reads the raw data
+clean = cleaned()
+past = clean.speed[anchor - data.seq_in + 1: anchor + 1]            # (12, N)
+future = clean.speed[anchor + 1: anchor + data.seq_out + 1]         # (12, N)
+fut_est = clean.filled[anchor + 1: anchor + data.seq_out + 1] != C.RAW
 past_idx = data.index[anchor - data.seq_in + 1: anchor + 1]
 fut_idx = data.index[anchor + 1: anchor + data.seq_out + 1]
 
 now_speed = float(past[-1, sensor])
-ms = future[:, sensor] > 0
-mae_s = float(np.abs(pred[ms, sensor] - future[ms, sensor]).mean()) if ms.any() else None
-m = future > 0
-mae_all = float(np.abs(pred[m] - future[m]).mean())
+now_fill = C.FILLS[int(clean.filled[anchor, sensor])]
+mae_s = float(np.abs(pred[:, sensor] - future[:, sensor]).mean())
+n_est = int(fut_est[:, sensor].sum())
+mae_all = float(np.abs(pred - future).mean())
 congested = int((pred[horizon - 1] < 40).sum())
 
 with st.sidebar:
     st.markdown("**Find a sensor**")
-    observed = past[-1] > 0
-    slowest = int(np.argmin(np.where(observed, past[-1], np.inf)))
-    drop = int(np.argmax(np.where(observed, past[-1] - pred[-1], -np.inf)))
-    err = np.where(m, np.abs(pred - future), np.nan)
-    worst = int(np.nanargmax(np.nanmean(np.where(m.any(0), err, 0), 0)))
+    slowest = int(np.argmin(past[-1]))
+    drop = int(np.argmax(past[-1] - pred[-1]))
+    worst = int(np.argmax(np.abs(pred - future).mean(0)))
     rnd = int(np.random.default_rng(pos).integers(data.num_nodes))
     s = st.columns(2, gap="small")
     s[0].button("Slowest", icon=":material/speed:", on_click=pick_sensor, args=(slowest,), width="stretch",
@@ -289,32 +278,35 @@ st.markdown(
     f"**{t_now:%A %d %B %Y, %H:%M}** · next 60 minutes · {data.num_nodes} sensors</span>",
     unsafe_allow_html=True)
 
-forecast_tab, day_tab, acc_tab, dq_tab = st.tabs(["Live forecast", "Whole day", "Model accuracy", "Data quality"])
+forecast_tab, day_tab, acc_tab = st.tabs(["Live forecast", "Whole day", "Model accuracy"])
 
 with forecast_tab:
     k = st.columns(5)
-    k[0].metric("Speed now", f"{now_speed:.1f} mph" if now_speed > 0 else "—", border=True, height=150,
-                chart_data=list(nan_missing(past[:, sensor])), chart_type="area",
-                help=None if now_speed > 0 else "No reading at this sensor right now.")
+    filled = now_fill != "original"
+    how = {"linear": "interpolated between the nearest real readings",
+           "weekly_profile": "the sensor's usual speed for this time of week"}.get(now_fill, "")
+    k[0].metric("Speed now", f"{now_speed:.1f} mph", border=True, height=150,
+                chart_data=list(past[:, sensor]), chart_type="area",
+                delta="estimated" if filled else None, delta_color="off", delta_arrow="off",
+                help=f"No usable reading at this sensor right now, so this value is {how}." if filled else None)
     for col, (label, h) in zip(k[1:4], HORIZONS.items()):
         v = float(pred[h - 1, sensor])
         col.metric(f"Forecast +{label}", f"{v:.1f} mph", border=True, height=150,
-                   delta=f"{v - now_speed:+.1f} mph" if now_speed > 0 else None,
-                   delta_description="vs. now" if now_speed > 0 else None)
-    k[4].metric("Error, next hour", f"{mae_s:.2f} mph" if mae_s is not None else "n/a", border=True, height=150,
-                help="Mean absolute error of this sensor's 12 forecasts against what was then measured. "
-                     f"Across all sensors for this hour: {mae_all:.2f} mph.")
-    if mae_s is None:
-        st.info("This sensor reported no readings in the next hour (offline), so the forecast "
-                "can't be checked. Pick another sensor, or click one on the map.", icon="ℹ️")
+                   delta=f"{v - now_speed:+.1f} mph", delta_description="vs. now")
+    k[4].metric("Error, next hour", f"{mae_s:.2f} mph", border=True, height=150,
+                delta="estimated" if n_est else None, delta_color="off", delta_arrow="off",
+                help="Mean absolute error of this sensor's 12 forecasts against the speeds that followed. "
+                     + (f"{n_est} of those 12 readings were missing and are filled in from the cleaned data. "
+                        if n_est else "")
+                     + f"Across all sensors for this hour: {mae_all:.2f} mph.")
 
     left, right = st.columns([7, 5], gap="medium")
     with left, st.container(border=True):
         st.markdown(f"**Sensor {data.sensor_ids[sensor]}** · last hour and next hour")
         wide = pd.DataFrame({
             "time": past_idx.append(fut_idx),
-            "Actual": np.concatenate([nan_missing(past[:, sensor]), nan_missing(future[:, sensor])]),
-            "Forecast": np.concatenate([[np.nan] * (data.seq_in - 1), [now_speed or np.nan], pred[:, sensor]]),
+            "Actual": np.concatenate([past[:, sensor], future[:, sensor]]),
+            "Forecast": np.concatenate([[np.nan] * (data.seq_in - 1), [now_speed], pred[:, sensor]]),
         })
         st.altair_chart(series_chart(wide, t_now, 360, shade_until=fut_idx[-1]), width="stretch")
 
@@ -355,7 +347,7 @@ with day_tab:
         with st.container(border=True):
             st.markdown(f"**{(h + 1) * 5} minutes ahead**")
             wide = pd.DataFrame({"time": data.index[day_anchors + h + 1],
-                                 "Actual": nan_missing(data.speed[day_anchors + h + 1, sensor]),
+                                 "Actual": clean.speed[day_anchors + h + 1, sensor],
                                  "Forecast": day_pred[:, h, sensor]})
             st.altair_chart(series_chart(wide, t_now, 230), width="stretch")
 
@@ -400,91 +392,6 @@ with acc_tab:
     st.markdown(f"**{metric} ({unit[metric]})** · best per column in bold")
     st.dataframe(table.style.format("{:.3f}").highlight_min(axis=0, props="font-weight:700"),
                  width="stretch")
-
-with dq_tab:
-    clean, checks, quality, bench = data_quality()
-    counts = clean.counts()
-    flagged = 100 * (1 - counts["valid"] / counts["cells"])
-    st.caption("A validated, cleaned copy of the data for analysis. The model itself reads the raw readings "
-               "with missing values masked, the standard METR-LA protocol, so its scores stay comparable "
-               "with published results.")
-    k = st.columns(4)
-    k[0].metric("Integrity checks passed", f"{int(checks.passed.sum())} / {len(checks)}", border=True,
-                help="Timestamps, 5-minute grid, sensor order, value range, locations and road distances.")
-    k[1].metric("Readings flagged", f"{flagged:.2f}%", border=True,
-                help=f"{counts['cells'] - counts['valid']:,} of {counts['cells']:,} readings")
-    k[2].metric("Network-wide outages", f"{int(C.detect_outages(data.speed).sum()):,} steps", border=True,
-                help="Time steps at which every sensor reported 0 mph.")
-    k[3].metric("Glitches removed", f"{counts['issues']['spike'] + counts['issues']['stuck']:,}", border=True,
-                help=f"{counts['issues']['spike']:,} one-step spikes (Hampel filter) and "
-                     f"{counts['issues']['stuck']:,} stuck-sensor repeats.")
-
-    with st.container(border=True):
-        day = t_now.date()
-        rows = np.flatnonzero(data.index.date == day)
-        st.markdown(f"**Sensor {data.sensor_ids[sensor]}** · {day:%A %d %B} · raw readings vs. cleaned series")
-        iss = clean.issue[rows, sensor]
-        wide = pd.DataFrame({"time": utc(data.index[rows]), "Raw": np.where(iss == C.OK, data.speed[rows, sensor], np.nan),
-                             "Cleaned": clean.speed[rows, sensor],
-                             "issue": [C.ISSUES.get(int(c), "valid") for c in iss],
-                             "fill": [C.FILLS[int(c)] for c in clean.filled[rows, sensor]]})
-        long = wide.melt(["time", "issue", "fill"], ["Cleaned", "Raw"], "series", "speed").dropna()
-        color = alt.Color("series:N", title=None, legend=alt.Legend(orient="top", labelColor=pal["muted"]),
-                          scale=alt.Scale(domain=["Cleaned", "Raw"], range=[pal["forecast"], pal["actual"]]))
-        lines = alt.Chart(long).mark_line(strokeWidth=2).encode(x=clock_axis(), y=speed_axis(0, 75), color=color)
-        bad = wide[wide.issue != "valid"].assign(speed=data.speed[rows, sensor][iss != C.OK])
-        marks = alt.Chart(bad).mark_point(shape="cross", size=40, color=pal["series"][1], filled=True).encode(
-            x=clock_axis(), y=speed_axis(0, 75),
-            tooltip=[alt.Tooltip("time:T", format="%H:%M", title="Time"), alt.Tooltip("speed:Q", title="Raw (mph)"),
-                     alt.Tooltip("issue:N", title="Issue"), alt.Tooltip("fill:N", title="Filled by")])
-        st.altair_chart(alt.layer(lines, marks).properties(height=260).configure_view(stroke=None), width="stretch")
-        n_bad = int((iss != C.OK).sum())
-        st.caption(f"{n_bad} of {len(rows)} readings flagged this day (orange crosses). "
-                   "Gaps up to 1 hour are filled by linear interpolation, longer ones by the sensor's "
-                   "usual speed for that time of week, learned from the training period only.")
-
-    a, b = st.columns(2, gap="medium")
-    with a, st.container(border=True):
-        st.markdown("**Readings flagged, by issue**")
-        names = {"outage": "Network outage", "missing": "Sensor missing", "spike": "Spike",
-                 "stuck": "Stuck sensor", "out_of_range": "Out of range"}
-        bars = pd.DataFrame({"issue": list(names.values()),
-                             "count": [counts["issues"][n] for n in names],
-                             "pct": [counts["issues_pct"][n] for n in names]})
-        st.altair_chart(alt.Chart(bars).mark_bar(color=pal["forecast"], cornerRadiusEnd=3).encode(
-            x=alt.X("pct:Q", title="Share of all readings (%)",
-                    axis=alt.Axis(labelColor=pal["muted"], titleColor=pal["muted"], gridColor=pal["grid"])),
-            y=alt.Y("issue:N", sort=None, title=None, axis=alt.Axis(labelColor=pal["muted"], ticks=False, domain=False)),
-            tooltip=[alt.Tooltip("issue:N", title="Issue"), alt.Tooltip("count:Q", format=",", title="Readings"),
-                     alt.Tooltip("pct:Q", format=".3f", title="Share (%)")])
-            .properties(height=220).configure_view(stroke=None), width="stretch")
-    with b, st.container(border=True):
-        st.markdown("**Imputation error on hidden gaps** · validation + test period")
-        methods = ["hybrid (ours)", "linear", "weekly_profile", "forward_fill"]
-        bl = bench[bench.method.isin(methods)]
-        st.altair_chart(alt.Chart(bl).mark_line(point=True).encode(
-            x=alt.X("gap_minutes:Q", title="Gap length (minutes, log scale)", scale=alt.Scale(type="log"),
-                    axis=alt.Axis(values=sorted(bl.gap_minutes.unique()), labelColor=pal["muted"],
-                                  titleColor=pal["muted"], grid=False)),
-            y=alt.Y("MAE:Q", title="MAE (mph)", axis=alt.Axis(labelColor=pal["muted"], titleColor=pal["muted"],
-                                                               gridColor=pal["grid"])),
-            color=alt.Color("method:N", title=None, sort=methods, legend=alt.Legend(orient="top", labelColor=pal["muted"]),
-                            scale=alt.Scale(domain=methods, range=pal["series"][:4])),
-            strokeWidth=alt.condition(alt.datum.method == "hybrid (ours)", alt.value(3), alt.value(1.5)),
-            tooltip=[alt.Tooltip("method:N", title="Method"), alt.Tooltip("gap_minutes:Q", title="Gap (min)"),
-                     alt.Tooltip("MAE:Q", format=".2f", title="MAE (mph)")])
-            .properties(height=220).configure_view(stroke=None), width="stretch")
-
-    c, q = st.columns([2, 3], gap="medium")
-    with c:
-        st.markdown("**Integrity checks**")
-        st.dataframe(checks.assign(passed=checks.passed.map({True: "✅", False: "❌"})),
-                     hide_index=True, width="stretch")
-    with q:
-        st.markdown("**Least reliable sensors** · share of readings flagged")
-        st.dataframe(quality[["sensor_id", "flagged_pct", "missing_pct", "spike_pct", "stuck_pct",
-                              "longest_gap_hours"]].head(15).style.format(precision=2),
-                     hide_index=True, width="stretch")
 
 if st.session_state.playing and pos + 1 < len(test_times):
     time.sleep(1.0)
