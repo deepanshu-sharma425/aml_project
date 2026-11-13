@@ -1,0 +1,181 @@
+\section{Network-Aware Deep Learning and the Hybrid}
+\label{sec:deep}
+
+\subsection{The independent-segment baseline and its gap}
+\label{sec:gap}
+\textbf{XGBoost per segment.} Following the project brief, the classical baseline
+of Phase~2 is a set of $N{=}207$ independent models, one per road segment. Model
+$f_i$ sees only sensor $i$'s own history: 12 forward-filled lags; 1- and 3-step
+differences; rolling mean, standard deviation and minimum; missing count and a
+missing-now flag over the last hour; sin/cos time of day, day of week and a weekend
+flag; the weekly profile $\mu_i(\tau(t{+}h))$ at all 12 target times (known in
+advance), $\mu_i(\tau(t))$, and the current anomaly $a_{t,i}$ (37 features). The
+brief also suggests flow and occupancy features; METR-LA publishes speed only, so
+these would require the raw PeMS station files, which we leave as an extension.
+Static road-segment attributes are constant within a per-segment model and
+therefore carry no information there; the pooled gradient-boosting model of
+Phase~1 uses them (Section~\ref{sec:features}). Each
+$f_i$ is a multi-output XGBoost regressor~\cite{chen2016xgboost} with vector-leaf
+trees (one tree predicts all 12 horizons), absolute-error loss, depth 6, learning
+rate 0.1, and early stopping (patience 30) on every second validation window. On six
+randomly chosen sensors, scored on the validation windows not used for early
+stopping, vector-leaf trees were slightly more accurate than one tree per horizon
+(MAE 2.721 vs.\ 2.738\,mph) at similar cost (3.4 vs.\ 2.9\,s per sensor;
+\texttt{scripts/compare\_xgb\_strategy.py}).
+
+\textbf{The gap, formally.} Let $\mathcal{F}^{i}_t$ be the information in sensor
+$i$'s own past and $\mathcal{F}^{\mathcal{G}}_t\supseteq\mathcal{F}^{i}_t$ the
+information in the whole network's past. By the law of total variance, the best
+forecasts under squared loss, $m_i=\mathbb{E}[y\mid\mathcal{F}^{i}_t]$ and
+$m_{\mathcal{G}}=\mathbb{E}[y\mid\mathcal{F}^{\mathcal{G}}_t]$, satisfy
+\begin{equation}
+\begin{split}
+\mathbb{E}\big[(y-m_i)^2\big]-\mathbb{E}\big[(y-m_{\mathcal{G}})^2\big]
+&=\mathbb{E}\big[(m_{\mathcal{G}}-m_i)^2\big]\ \ge 0,
+\end{split}
+\label{eq:gap}
+\end{equation}
+because $y-m_{\mathcal{G}}$ is orthogonal to every function of
+$\mathcal{F}^{\mathcal{G}}_t\supseteq\mathcal{F}^{i}_t$. Equality holds only if the
+network adds nothing. An independent model can at best reach the first term. The gap
+is non-zero exactly when the residual
+$r_{t+h,i}=y_{t+h,i}-f_i(\mathcal{F}^{i}_t)$ is predictable from other sensors at
+time $t$. We test this directly on out-of-fold \emph{training} residuals, without
+touching the test set: (i) are residuals of neighbouring segments correlated, and
+(ii) does information available at time $t$, namely the anomalies and trends of
+downstream and upstream neighbours, correlate with $r$? Section~\ref{sec:p2results}
+shows that both hold. This is the empirical justification for adding a graph model.
+
+\subsection{ST-GAT: spatio-temporal graph attention network}
+\label{sec:stgat}
+\textbf{Input.} For each window the network receives
+$\mathcal{X}\in\R^{T'\times N\times 6}$ with $T'{=}12$. The channels are the
+z-scored, causally forward-filled speed; a 0/1 observation mask; and $\sin/\cos$
+of time of day and of day of week (Section~\ref{sec:dldata}). A learned node
+embedding $\vect{e}_i\in\R^{16}$ is concatenated at every step~\cite{shao2022stid},
+and a $1{\times}1$ convolution lifts the channels to $d{=}64$.
+
+\textbf{Gated temporal convolution.} As in STGCN~\cite{yu2018stgcn}, a valid
+convolution of width $K_t{=}3$ along time produces $2d$ channels split into $P,Q$:
+\begin{equation}
+\Gamma(\mathcal{H})=\big(P+\mathcal{R}(\mathcal{H})\big)\odot\sigma(Q),\qquad [P;Q]=\Theta\star_t\mathcal{H},
+\label{eq:glu}
+\end{equation}
+where $\mathcal{R}$ crops the input to the output length (residual path) and the
+sigmoid gate~\cite{dauphin2017glu} controls information flow.
+
+\textbf{Directional graph attention.} The road graph is directed (73\,\% of
+edges are one-way) and congestion moves against the direction of travel. We
+therefore attend separately over \emph{downstream} neighbours
+$\mathcal{N}^{\downarrow}(i)=\{j: W_{ij}>0\}\cup\{i\}$ and \emph{upstream}
+neighbours $\mathcal{N}^{\uparrow}(i)=\{j: W_{ji}>0\}\cup\{i\}$, each with $H{=}4$
+heads of width $d/(2H)$. For one direction and head,
+\begin{align}
+s_{ij}&=\operatorname{LeakyReLU}_{0.2}\!\big(\vect{a}_{\mathrm{dst}}^\top W\bar{\vect{h}}_i+\vect{a}_{\mathrm{src}}^\top W\bar{\vect{h}}_j\big),\\
+\alpha_{ij}&=\frac{\exp(s_{ij})}{\sum_{k\in\mathcal{N}(i)}\exp(s_{ik})},\qquad
+\vect{h}'_{t,i}=\sum_{j\in\mathcal{N}(i)}\alpha_{ij}\,W\vect{h}_{t,j},
+\label{eq:gat}
+\end{align}
+which is exactly the GAT layer~\cite{velickovic2018gat}. A unit test checks our
+implementation against PyTorch Geometric's \texttt{GATConv}~\cite{fey2019pyg} to
+$10^{-5}$. One deliberate change is that the scores use the window-averaged state
+$\bar{\vect{h}}_i=\frac{1}{T}\sum_t\vect{h}_{t,i}$. The coefficients are therefore
+computed once per window and shared by its time steps, as in ASTGCN's spatial
+attention~\cite{guo2019astgcn}. This turns each head into one masked $N{\times}N$
+matrix product and needs $T$ times fewer attention scores ($HN^2$ instead of
+$THN^2$) than per-step attention. The cost is that the weights cannot change
+\emph{within} a one-hour window. The eight heads are
+concatenated, passed through ELU, mixed by a linear layer, and added back
+(residual).
+
+\textbf{Block and output.} One ST block is the sandwich
+$\mathcal{H}\leftarrow\operatorname{Dropout}\big(\operatorname{LN}(\Gamma_2(\mathcal{H}'+\operatorname{GAT}(\mathcal{H}')))\big)$
+with $\mathcal{H}'=\Gamma_1(\mathcal{H})$ and layer normalisation~\cite{ba2016layernorm}.
+Two blocks shrink the window $12{\to}10{\to}8{\to}6{\to}4$ steps, a final gated
+convolution of width 4 collapses it to one vector per sensor, and a two-layer MLP
+outputs all 12 horizons at once (direct strategy). The model has 163,516 parameters,
+about half as many as Graph WaveNet (300,952).
+
+\textbf{Receptive field and complexity.} Every output sees all 12 input steps.
+Spatially, two blocks give two hops in each direction, which covers on average 36
+sensors within two undirected hops; the median edge is 2.8\,km. One block costs
+$O(BT'Nd^2K_t)$ for the convolutions and $O(BHN^2 + BT'HNd)$ for attention. With
+$N{=}207$ the dense masked form is cheaper on a GPU than gathering the 1,515 edges.
+
+\textbf{What attention adds.} The diffusion convolution of
+Eq.~\eqref{eq:diffusion} uses fixed weights $(P^k)_{ij}$ that depend only on road
+distance. A mean aggregator~\cite{hamilton2017sage} uses $1/|\mathcal{N}(i)|$.
+Eq.~\eqref{eq:gat} makes $\alpha_{ij}$ a function of the current states, so the
+influence of a neighbour can grow when it is congested. Setting
+$\vect{a}_{\mathrm{src}}=\vect{a}_{\mathrm{dst}}=\vect{0}$ recovers the mean
+aggregator, so attention strictly generalises it. Our ablation measures what this
+adaptivity is worth. Attention, mean aggregation and the masked inputs are all
+permutation-equivariant in the sensors; only the node embedding breaks the symmetry,
+deliberately.
+
+\subsection{Hybrid: XGBoost per segment \texorpdfstring{$\to$}{to} graph attention}
+\label{sec:hybrid}
+\textbf{Design.} The hybrid keeps what each model does best. The per-segment
+XGBoost supplies a strong forecast of each segment's own level, seasonality and
+recent trend $\hat{\vect{y}}^{\,\mathrm{seg}}_{i}\in\R^{12}$. ST-GAT learns only
+what the independent models cannot: the network-level correction
+\begin{equation}
+\hat{\vect{y}}_{i}=\hat{\vect{y}}^{\,\mathrm{seg}}_{i}+g_\theta\big(\mathcal{X},\hat{Y}^{\mathrm{seg}};\mathcal{G}\big)_i .
+\label{eq:hybrid}
+\end{equation}
+The base forecasts of all sensors enter $g_\theta$ through a linear embedding. They
+are fused with the ST-GAT representation, and one more directional GAT layer lets
+each sensor attend to its neighbours' forecasts. A segment can thus react when the
+independent model just downstream predicts a slowdown. The last layer of $g_\theta$
+is zero-initialised, so training starts \emph{exactly} at the XGBoost forecast (a
+unit test checks this) and gradient descent only has to learn a residual. Residual
+learning~\cite{he2016resnet,zhang2003hybrid} is easier: by
+Section~\ref{sec:gap}, the residual has much lower variance than the speed itself,
+and its structure is precisely the spatial propagation that graph attention models.
+
+\textbf{Leakage-free stacking.} The second stage must be trained on base forecasts
+that are as wrong as they will be at test time. In-sample forecasts are too good:
+the XGBoost in-sample training MAE is 2.69\,mph against 2.99\,mph out-of-fold.
+A meta-learner trained on them would learn to trust the base too much. We therefore
+\emph{cross-fit}~\cite{wolpert1992stacking}. The training anchors are cut into
+$K{=}5$ contiguous blocks. For each block an XGBoost model is fitted on the other
+blocks, after removing anchors within 23 steps of the block so that no 23-step
+window (11 input and 12 target steps) is shared, and it forecasts the held-out
+block~\cite{bergmeir2012cv}. Validation and test anchors receive forecasts from
+the model fitted on the whole training period, so evaluation stays strictly causal.
+The ablation also trains the hybrid on in-sample base forecasts to show the cost of
+skipping this step.
+
+\subsection{Deep learning dataset and regularisation}
+\label{sec:dldata}
+\textbf{Dataset construction.} Samples are sliding 24-step windows (12 in, 12
+out) indexed by their anchor time, split chronologically 70/10/20 with no shuffling
+across the boundaries. Shuffling happens only \emph{within} the training period,
+between mini-batches. The scaler, the weekly profile, the XGBoost models and every
+statistic are fitted on training timestamps only.
+
+\textbf{Outages are masked, not zero traffic.} The Phase~1 pipeline (inherited
+from DCRNN) feeds a missing reading to the network as $0$\,mph, which is about
+$-4.5$ standard deviations and indistinguishable from a total standstill. The new
+pipeline forward-fills the last observation (causal) and adds an explicit
+observation-mask channel~\cite{che2018grud}, so the network can learn how much to
+trust a stale value. Missing \emph{targets} are excluded from the loss
+(Eq.~\eqref{eq:loss}) and from every metric. An ablation trains ST-GAT on the old
+zero-filled inputs.
+
+\textbf{Cyclic time.} Time of day and day of week enter as
+$(\sin 2\pi u,\cos 2\pi u)$. The Phase~1 scalar $u\in[0,1)$ places 23:55 and 00:00
+at opposite ends of the scale, while the circle embedding keeps them adjacent and
+keeps all slots at equal norm.
+
+\textbf{Regularisation.} The networks have $1.6\times10^5$ parameters, and the
+training set holds 23,974 overlapping windows that are strongly autocorrelated, so
+the effective sample size is much smaller. We use dropout~\cite{srivastava2014dropout}
+(0.2) after every block and in the head; attention dropout (0.1) on the
+coefficients, which randomly removes neighbours, much like DropEdge; layer
+normalisation; AdamW with decoupled weight decay $10^{-4}$~\cite{loshchilov2019adamw};
+gradient clipping at norm 5; halving the learning rate after 3 epochs without
+validation improvement; and early stopping~\cite{prechelt1998} with patience 8,
+keeping the best validation checkpoint. Each epoch visits a fresh random half of the
+training windows. Adjacent windows share 11 of 12 steps, so this halves the cost and
+acts as mild data subsampling.

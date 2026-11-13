@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\caption{Robustness to sensor outages: test MAE at 60\,min when the sensor's most recent input reading is observed or missing (12.1\% of cases).}
+\label{tab:p2robust}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lccc}
+\toprule
+Model & Latest observed & Latest missing & Change \\
+\midrule
+Historical Average & 4.17 & 4.70 & +13\% \\
+Persistence & 5.31 & 7.89 & +49\% \\
+Ridge (features) & 4.06 & 5.23 & +29\% \\
+Gradient Boosting (features) & 3.63 & 4.50 & +24\% \\
+XGBoost per segment & 3.61 & 4.75 & +32\% \\
+Graph WaveNet & 3.54 & 5.36 & +52\% \\
+ST-GAT & 3.44 & 4.41 & +28\% \\
+Hybrid XGB$\to$GAT & 3.48 & 4.66 & +34\% \\
+\bottomrule
+\end{tabular}
+\end{table}

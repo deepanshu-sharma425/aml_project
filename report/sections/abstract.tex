@@ -1,1 +1,22 @@
-Placeholder abstract.
+Can graph learning over a road network improve on independent forecasts of each road
+segment? We study 5--60-minute speed forecasting at 207 sensors of the METR-LA
+benchmark under a strict protocol: chronological splits, the same one-hour history
+for every model, masked metrics at every horizon, and peak, off-peak and congested
+regimes. A strong per-segment baseline of 207 multi-output XGBoost models reaches a
+mean absolute error (MAE) of 3.20\,mph. On out-of-fold training residuals, we show
+that its errors are spatially correlated and predictable from the state of
+neighbouring segments at forecast time, which is the information an independent
+model cannot use. We then propose ST-GAT, a spatio-temporal graph attention network
+over the fixed road graph with separate downstream and upstream attention,
+outage masks and cyclic time inputs, and a hybrid in which graph attention learns a
+residual correction to the XGBoost forecasts, trained on leakage-free cross-fitted
+base predictions. ST-GAT lowers the MAE to 3.04\,mph ($-5\,\%$; 3.47\,mph at
+60\,min, below our Graph WaveNet's 3.59 with half the parameters), and the hybrid to
+3.06\,mph, with the best 15-minute accuracy of our graph-attention models (2.72\,mph).
+Both gains over the independent models are significant at every horizon
+(Diebold--Mariano, $p<0.001$) and largest in peak periods and congestion. Ablations
+isolate the value of the graph, of attention, of the road prior, of outage masking,
+of the residual connection and of cross-fitting. An offline, simulated signal-plan
+experiment shows that network-aware forecasts let a controller anticipate 1.5--2
+times as many congestion onsets as the independent model; we make no claim of live
+control.

@@ -1,35 +1,46 @@
 \section{Introduction}
 Accurate short-term traffic forecasts underpin route guidance, ramp metering,
-incident response and travel-time estimation in Intelligent Transportation
-Systems~\cite{vlahogianni2014}. Forecasting freeway speed is hard for four
-reasons that are all visible in real sensor data: the dynamics are strongly
-\emph{non-linear} near the onset of congestion; the series are
-\emph{seasonal} (daily and weekly demand cycles); congestion
-\emph{propagates spatially} along the road network; and loop detectors
-frequently \emph{fail}, producing missing readings.
+signal-plan selection, incident response and travel-time estimation in Intelligent
+Transportation Systems~\cite{vlahogianni2014}. Forecasting freeway speed is hard
+for four reasons, all visible in real sensor data: the dynamics are strongly
+\emph{non-linear} near the onset of congestion; the series are \emph{seasonal}
+(daily and weekly demand cycles); congestion \emph{propagates spatially} along the
+road network; and loop detectors frequently \emph{fail}, leaving missing readings.
 
-Research has moved from univariate statistical models (ARIMA~\cite{ahmed1979,williams2003})
-through feature-based machine learning~\cite{smith1997} and recurrent networks~\cite{ma2015lstm}
-to spatio-temporal graph neural networks (GNNs) that treat the sensor network as a
+A natural engineering answer is to fit one well-tuned model per road segment, using
+that segment's own history plus calendar features. Such models are cheap, robust and
+easy to maintain, but by construction they cannot see a queue forming one
+interchange downstream. Graph neural networks (GNNs) treat the sensor network as a
 graph~\cite{li2018dcrnn,yu2018stgcn,wu2019gwnet}. Published comparisons, however,
-often pit sophisticated GNNs against feature-poor classical baselines, and rarely
-test whether accuracy differences are statistically significant.
+usually pit them against feature-poor baselines and rarely test whether the gains
+are statistically significant.
 
-This paper studies 1-hour-ahead speed forecasting on the METR-LA
-benchmark~\cite{li2018dcrnn} and makes the following contributions:
+This paper asks a focused question: \emph{does network-aware graph learning improve
+on independent road-segment forecasts, and where?} We study 5--60-minute speed
+forecasting on the METR-LA benchmark~\cite{li2018dcrnn} in two phases.
+\textbf{Phase~1} built a data-quality analysis, a leakage-tested feature set and a
+ladder of classical and deep forecasters (up to Graph WaveNet).
+\textbf{Phase~2}, the focus of this version, contributes:
 \begin{enumerate}
-\item A data-quality and exploratory analysis that quantifies missingness,
-seasonality, stationarity and spatial dependence. It links each finding to a
-modelling decision.
-\item A leakage-tested feature set (34 features in six groups) that includes a weekly
-profile/anomaly decomposition and upstream/downstream graph aggregates. Its value
-is measured by cumulative ablation and permutation importance.
-\item A controlled ladder of six forecasters (Historical Average, Persistence,
-Ridge, gradient boosting, LSTM and Graph WaveNet~\cite{wu2019gwnet}) evaluated
-under the standard protocol. We compare against published results and report
-Diebold--Mariano tests~\cite{diebold1995} and block-bootstrap confidence intervals.
-\item An ablation of Graph WaveNet's spatial module (none, road graph, adaptive
-graph, both) under an equal budget, plus error analyses by horizon, time of day,
-sensor and missing input.
+\item \textbf{A strong independent-segment baseline and a test of its gap.} We fit
+207 multi-output XGBoost models, one per segment, and show on out-of-fold training
+residuals that their errors are spatially correlated and predictable from
+neighbours' state at forecast time. This is the information an independent model
+cannot use.
+\item \textbf{ST-GAT}, a spatio-temporal graph attention network over the
+\emph{fixed} road graph. Separate attention over downstream and upstream neighbours
+respects the direction of traffic. Outage-aware masked inputs and cyclic time
+encodings replace the zero-filled inputs of earlier pipelines.
+\item \textbf{A technically justified hybrid.} Graph attention learns a residual
+correction to the per-segment XGBoost forecasts, which are made leakage-free by
+blocked, purged cross-fitting.
+\item \textbf{Ablations} that isolate the value of the graph, of attention versus
+mean aggregation, of the road-graph prior, of outage masking, of the residual
+connection and of cross-fitting, all under equal training budgets.
+\item \textbf{A fair evaluation}: chronological splits, a 12-step history for every
+model, MAE/RMSE/MAPE at every horizon, peak versus off-peak and congested
+regimes, Diebold--Mariano tests~\cite{diebold1995}, day-block bootstrap
+intervals, congestion and attention maps, and an \emph{offline simulated}
+signal-plan switching experiment. We make no claim of live traffic control.
 \end{enumerate}
 All code, tests and results are released in the project repository.

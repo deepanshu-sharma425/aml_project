@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Simulated congestion-plan switching on the test period (6,554 congestion onsets). Offline replay only; no live control.}
+\label{tab:p2signal}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccc}
+\toprule
+Policy & Antic.\,\% & Lead (min) & False\,\% & Switch/day \\
+\midrule
+Reactive (speed now) & 0.0 & 0 & 10.6 & 6.6 \\
+XGBoost per segment & 19.8 & 10 & 7.7 & 4.1 \\
+Graph WaveNet & 39.2 & 10 & 5.9 & 3.8 \\
+ST-GAT & 30.1 & 10 & 7.7 & 3.4 \\
+Hybrid XGB$\to$GAT & 35.7 & 10 & 6.0 & 3.8 \\
+Oracle (true future) & 100.0 & 15 & 0.0 & 6.9 \\
+\bottomrule
+\end{tabular}
+\end{table}

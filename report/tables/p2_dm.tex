@@ -1,0 +1,19 @@
+\begin{table*}[t]
+\centering
+\caption{Diebold--Mariano statistic ($p$-value) on absolute error with Newey--West variance. Negative: A is more accurate.}
+\label{tab:p2dm}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lccc}
+\toprule
+Comparison (A vs.\ B) & 15 min & 30 min & 60 min \\
+\midrule
+Hybrid XGB$\to$GAT vs.\ XGBoost per segment & -25.2 ($<$.001) & -17.2 ($<$.001) & -9.8 ($<$.001) \\
+ST-GAT vs.\ XGBoost per segment & -23.5 ($<$.001) & -17.6 ($<$.001) & -11.8 ($<$.001) \\
+Hybrid XGB$\to$GAT vs.\ ST-GAT & -3.2 (0.001) & 2.7 (0.008) & 5.0 ($<$.001) \\
+Hybrid XGB$\to$GAT vs.\ Graph WaveNet & 1.5 (0.137) & -0.9 (0.355) & -4.3 ($<$.001) \\
+ST-GAT vs.\ Graph WaveNet & 3.9 ($<$.001) & -2.8 (0.005) & -7.2 ($<$.001) \\
+Hybrid XGB$\to$GAT vs.\ Gradient Boosting (features) & -29.2 ($<$.001) & -20.8 ($<$.001) & -12.0 ($<$.001) \\
+XGBoost per segment vs.\ Gradient Boosting (features) & -1.1 (0.261) & -5.5 ($<$.001) & -2.1 (0.033) \\
+\bottomrule
+\end{tabular}
+\end{table*}

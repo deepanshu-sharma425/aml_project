@@ -1,0 +1,27 @@
+\begin{table*}[t]
+\centering
+\caption{Test-set accuracy on METR-LA (12-step history for every model). Best of our models in bold. $^\dagger$As reported by Wu et al. (2019).}
+\label{tab:p2main}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lccccccccc}
+\toprule
+ & \multicolumn{3}{c}{15 min} & \multicolumn{3}{c}{30 min} & \multicolumn{3}{c}{60 min} \\ \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+Model & MAE & RMSE & MAPE\% & MAE & RMSE & MAPE\% & MAE & RMSE & MAPE\% \\
+\midrule
+Historical Average & 4.19 & 7.85 & 13.03 & 4.19 & 7.85 & 13.03 & 4.19 & 7.85 & 13.03 \\
+Persistence & 3.50 & 6.42 & 8.61 & 4.21 & 8.05 & 10.85 & 5.38 & 10.34 & 14.52 \\
+Ridge (features) & 3.37 & 5.71 & 8.93 & 3.78 & 6.60 & 10.59 & 4.09 & 7.33 & 12.03 \\
+Gradient Boosting (features) & 2.89 & 5.56 & 7.79 & 3.29 & 6.54 & 9.43 & 3.66 & 7.45 & 11.13 \\
+XGBoost per segment & 2.89 & 5.67 & 8.14 & 3.26 & 6.62 & 9.71 & 3.64 & 7.50 & 11.35 \\
+Graph WaveNet & \textbf{2.72} & \textbf{5.18} & \textbf{7.02} & 3.10 & \textbf{6.24} & \textbf{8.52} & 3.59 & 7.42 & \textbf{10.35} \\
+ST-GAT & 2.74 & 5.23 & 7.45 & \textbf{3.08} & 6.26 & 8.88 & \textbf{3.47} & \textbf{7.30} & 10.58 \\
+Hybrid XGB$\to$GAT & 2.72 & 5.23 & 7.22 & 3.09 & 6.29 & 8.77 & 3.52 & 7.35 & 10.57 \\
+\midrule
+\multicolumn{10}{l}{\emph{Published results (same data and protocol)}} \\
+DCRNN [Li et al. 2018] & 2.77 & 5.38 & 7.30 & 3.15 & 6.45 & 8.80 & 3.60 & 7.60 & 10.50 \\
+STGCN [Yu et al. 2018]$^\dagger$ & 2.88 & 5.74 & 7.62 & 3.47 & 7.24 & 9.57 & 4.59 & 9.40 & 12.70 \\
+Graph WaveNet [Wu et al. 2019] & 2.69 & 5.15 & 6.90 & 3.07 & 6.22 & 8.37 & 3.53 & 7.37 & 10.01 \\
+GMAN [Zheng et al. 2020] & 2.80 & 5.55 & 7.41 & 3.12 & 6.49 & 8.73 & 3.44 & 7.35 & 10.07 \\
+\bottomrule
+\end{tabular}
+\end{table*}

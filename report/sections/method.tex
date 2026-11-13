@@ -59,8 +59,8 @@ this and lets each horizon weight features differently~\cite{taieb2012}.
 A two-layer LSTM~\cite{hochreiter1997} with 64 hidden units is shared across sensors.
 Each sensor's 12-step history $(x_{t},\,\text{tod}_t)$ is encoded by
 \begin{align}
-[\,\vect{i};\vect{f};\vect{o}\,]&=\sigma\!\left(W[\vect{h}_{s-1};\vect{x}_s]+\vect{b}\right),\quad
-\vect{g}=\tanh\!\left(W_g[\vect{h}_{s-1};\vect{x}_s]+\vect{b}_g\right),\nonumber\\
+[\,\vect{i};\vect{f};\vect{o}\,]&=\sigma\!\left(W[\vect{h}_{s-1};\vect{x}_s]+\vect{b}\right),\nonumber\\
+\vect{g}&=\tanh\!\left(W_g[\vect{h}_{s-1};\vect{x}_s]+\vect{b}_g\right),\nonumber\\
 \vect{c}_s&=\vect{f}\odot\vect{c}_{s-1}+\vect{i}\odot\vect{g},\qquad
 \vect{h}_s=\vect{o}\odot\tanh(\vect{c}_s).
 \end{align}
@@ -102,9 +102,9 @@ $1{\times}1$ convolution, which implements the $\Theta$'s.
 outgoing edge, and dependencies such as parallel freeways are not captured by
 distance. Graph WaveNet therefore learns
 \begin{equation}
-\tilde{A}=\operatorname{softmax}\!\big(\operatorname{ReLU}(E_1E_2)\big),\qquad E_1\in\R^{N\times 10},\;E_2\in\R^{10\times N},
+\tilde{A}=\operatorname{softmax}\!\big(\operatorname{ReLU}(E_1E_2)\big),
 \end{equation}
-end-to-end. ReLU prunes weak links, and the row softmax makes $\tilde{A}$ a valid
+with node embeddings $E_1\in\R^{N\times 10}$ and $E_2\in\R^{10\times N}$ trained end-to-end. ReLU prunes weak links, and the row softmax makes $\tilde{A}$ a valid
 transition matrix. Its rank is $\le 10$, which regularises the $O(N^2)$ parameterisation.
 
 \textbf{Output.} Skip connections from all layers are summed, passed through two

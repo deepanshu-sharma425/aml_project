@@ -1,37 +1,96 @@
-\section{Related Work}
-\textbf{Statistical models.} Ahmed and Cook~\cite{ahmed1979} first applied
-Box--Jenkins ARIMA to freeway data, and Williams and Hoel~\cite{williams2003}
-justified seasonal ARIMA by showing that weekly-differenced traffic is
-stationary. These models are univariate and linear, and they degrade quickly with
-horizon: on METR-LA, ARIMA's MAE rises from 3.99 to 6.90\,mph between 15 and
-60\,min~\cite{li2018dcrnn}.
+\section{Related Work and Deep Learning Literature Review}
+\label{sec:related}
 
-\textbf{Feature-based machine learning.} Non-parametric regression (k-NN) was shown
-to be competitive and robust~\cite{smith1997}. Tree ensembles~\cite{breiman2001}
-and gradient boosting~\cite{friedman2001,ke2017lightgbm} model non-linear
-interactions but depend heavily on feature engineering. In the DCRNN benchmark,
-SVR on raw lags reached only 6.72\,mph at 60\,min~\cite{li2018dcrnn}.
+\subsection{From statistical models to feature-based learning}
+Ahmed and Cook~\cite{ahmed1979} first applied Box--Jenkins ARIMA to freeway data,
+and Williams and Hoel~\cite{williams2003} justified seasonal ARIMA by showing that
+weekly-differenced traffic is stationary. These models are univariate and linear,
+and they degrade quickly with horizon: on METR-LA, ARIMA's MAE rises from 3.99 to
+6.90\,mph between 15 and 60\,min~\cite{li2018dcrnn}. Non-parametric
+regression~\cite{smith1997}, random forests~\cite{breiman2001} and gradient-boosted
+trees~\cite{friedman2001,chen2016xgboost,ke2017lightgbm} capture non-linear
+interactions and remain strong per-segment forecasters. Their accuracy, however,
+depends on hand-built features, and a model fitted to one segment cannot see what is
+happening on the links around it.
 
-\textbf{Deep sequence models.} Stacked autoencoders~\cite{lv2015} and
-LSTMs~\cite{hochreiter1997,ma2015lstm} learn temporal representations directly.
-Encoder--decoder (FC-)LSTMs~\cite{sutskever2014} predict a whole horizon and reach
-4.37\,mph at 60\,min on METR-LA~\cite{li2018dcrnn}, but they ignore road topology.
+\subsection{Deep sequence models}
+Stacked autoencoders~\cite{lv2015} and LSTMs~\cite{hochreiter1997,ma2015lstm}
+learn temporal representations directly from raw series, and encoder--decoder
+LSTMs~\cite{sutskever2014} forecast a whole horizon at once (4.37\,mph at 60\,min on
+METR-LA~\cite{li2018dcrnn}). Gated convolutions~\cite{dauphin2017glu} and dilated
+causal convolutions~\cite{oord2016wavenet} reach the same receptive field in
+parallel. All of these treat sensors as independent sequences or as one flat vector,
+so road topology is either ignored or must be learned from scratch.
 
-\textbf{Spatio-temporal GNNs.} Spectral~\cite{defferrard2016} and
-first-order~\cite{kipf2017} graph convolutions made it possible to exploit
-topology. DCRNN~\cite{li2018dcrnn} models traffic as a bidirectional diffusion
-process on a directed distance graph inside a GRU seq2seq. STGCN~\cite{yu2018stgcn}
-replaces recurrence with gated temporal convolutions, and ASTGCN~\cite{guo2019astgcn}
-adds attention. Graph WaveNet~\cite{wu2019gwnet} combines diffusion convolution
-with dilated causal convolutions~\cite{oord2016wavenet} and a \emph{self-adaptive}
-adjacency learned from node embeddings, showing that the predefined graph is
-incomplete. Later work learns the graph entirely (MTGNN~\cite{wu2020mtgnn},
-AGCRN~\cite{bai2020agcrn}), uses attention (GMAN~\cite{zheng2020gman},
-STAEformer~\cite{liu2023staeformer}), or shows that simple spatial and temporal
-identity embeddings recover much of the gain (STID~\cite{shao2022stid}).
+\subsection{Graph neural networks for traffic}
+Graph convolutions generalise convolution to irregular domains, either
+spectrally~\cite{defferrard2016} or with first-order neighbour
+aggregation~\cite{kipf2017}. GraphSAGE~\cite{hamilton2017sage} replaces the fixed
+normalisation with learnable aggregators such as the neighbour mean; a survey is
+given in~\cite{wu2021gnnsurvey}. DCRNN~\cite{li2018dcrnn} models traffic as
+bidirectional diffusion on the directed distance graph inside a GRU sequence-to-sequence
+model. STGCN~\cite{yu2018stgcn} interleaves gated temporal convolutions with
+Chebyshev graph convolutions in a ``sandwich'' block, and Graph
+WaveNet~\cite{wu2019gwnet} adds a self-adaptive adjacency learned from node
+embeddings. MTGNN~\cite{wu2020mtgnn} and AGCRN~\cite{bai2020agcrn} learn the graph
+entirely. STID~\cite{shao2022stid} shows that simple spatial and temporal identity
+embeddings recover much of the gain, which motivates the node embeddings in our model.
 Jiang and Luo~\cite{jiang2022survey} survey the area.
 
-\textbf{Positioning.} We adopt Graph WaveNet as our representative GNN. It is
-accurate, convolutional (so it trains on modest hardware) and lets us ablate both
-the predefined and the learned graph. We pair it with strong, leakage-free feature
-baselines and add significance testing, which the literature rarely reports.
+\subsection{Attention on graphs}
+Attention~\cite{bahdanau2015,vaswani2017} computes data-dependent weights over a
+set of inputs. Graph Attention Networks (GAT)~\cite{velickovic2018gat} apply it to
+a node's neighbourhood. The coefficient $\alpha_{ij}$ that node $i$ assigns to
+neighbour $j$ is a softmax over learned scores
+$\operatorname{LeakyReLU}(\vect{a}^\top[W\vect{h}_i\,\|\,W\vect{h}_j])$, so each
+neighbour's influence depends on the current states rather than on fixed edge weights.
+GATv2~\cite{brody2022gatv2} shows that this original form is ``static'': the ranking
+of neighbours is the same for every query node. It proposes a more expressive
+variant, which we discuss as future work. In traffic, GaAN~\cite{zhang2018gaan}
+gates attention heads, ASTGCN~\cite{guo2019astgcn} learns spatial and temporal
+attention matrices shared across an input window, and ST-GRAT~\cite{park2020stgrat}
+and GMAN~\cite{zheng2020gman} build encoder--decoders from spatio-temporal attention.
+Attention suits traffic because the relevance of a neighbour changes with
+conditions: a downstream queue matters only when one is forming.
+
+\subsection{Hybrid statistical / machine learning / deep models}
+Combining a strong structured model with a neural network has a long history in
+forecasting. Zhang~\cite{zhang2003hybrid} fits ARIMA to the linear component and
+a neural network to its \emph{residuals}. The M4-winning ES-RNN~\cite{smyl2020esrnn}
+couples exponential smoothing with an LSTM. Stacked
+generalisation~\cite{wolpert1992stacking} trains a second-level learner on the
+first-level model's \emph{out-of-sample} predictions, because in-sample predictions
+are optimistically biased and teach the meta-learner the wrong residual. For
+dependent data the folds must be contiguous blocks~\cite{bergmeir2012cv}, and
+leakage of future information is a well-documented failure
+mode~\cite{kaufman2012leakage}. Residual learning~\cite{he2016resnet} shows that
+learning a correction to a good reference is easier than learning the full mapping.
+Our hybrid combines these ideas. A per-segment gradient-boosting model supplies the
+reference, and a graph attention network learns the network-level residual. The
+blocked cross-fitting follows~\cite{bergmeir2012cv,wolpert1992stacking}.
+
+\subsection{Missing data and regularisation}
+Treating an absent reading as a value biases a network. GRU-D~\cite{che2018grud}
+shows that explicit missingness masks carry information and improve accuracy, and we
+adopt such a mask channel. Dropout~\cite{srivastava2014dropout}, decoupled weight
+decay~\cite{loshchilov2019adamw}, layer normalisation~\cite{ba2016layernorm} and
+early stopping~\cite{prechelt1998} are the standard regularisers for models of
+our size.
+
+\subsection{Signal control and simulation}
+Forecasts become valuable when they change a control decision. Classical ramp
+metering such as ALINEA~\cite{papageorgiou1991alinea} reacts to \emph{measured}
+occupancy. Reinforcement-learning signal controllers (e.g.\
+IntelliLight~\cite{wei2018intellilight}) are trained and evaluated in microscopic
+simulators such as SUMO~\cite{krajzewicz2012sumo} and CityFlow~\cite{zhang2019cityflow}.
+METR-LA provides speeds only, with no turning movements or signal timings. We
+therefore restrict ourselves to an \emph{offline, simulated} plan-switching
+experiment that measures whether a forecast lets a controller act before congestion
+arrives. We make no claim of live control.
+
+\textbf{Positioning.} Most published GNN comparisons on METR-LA pit
+sophisticated graph models against feature-poor baselines and do not test
+significance. We instead (i) build the strongest per-segment baseline we can,
+(ii) measure the specific information it lacks, (iii) fill exactly that gap with
+graph attention over the fixed road graph, and (iv) quantify every design choice by
+ablation and Diebold--Mariano tests.

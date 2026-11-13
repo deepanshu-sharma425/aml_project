@@ -8,17 +8,19 @@
 weekly profile and sensor statistics are fit on the training period only. The test
 split is used once, after all model selection.
 
-\textbf{Inputs.} Deep models receive two channels per sensor and step: z-scored speed
+\textbf{Inputs.} The Phase~1 deep models (LSTM, Graph WaveNet) receive two channels per sensor and step: z-scored speed
 (mean 58.58, std 12.83, from observed training values) and time of day in $[0,1)$.
 Following the reference pipeline, missing inputs keep their raw value 0, which
 z-scores to $-4.57$; this is a distinctive value the network can learn to recognise.
-Tabular models receive the 34 features of Section~\ref{sec:features}.
+ST-GAT and the hybrid instead use the masked, six-channel inputs of
+Section~\ref{sec:dldata}. Tabular models receive the 34 features of
+Section~\ref{sec:features}.
 
 \textbf{Model selection and training.} Table~\ref{tab:hparams} lists the settings.
 Consecutive windows share 11 of 12 steps, so the tabular models use every fourth
 training window ($\approx$1.15\,M observed rows per horizon) with little loss of
 information. The validation windows are split by parity: even windows select
-hyper-parameters, odd windows drive early stopping. Deep models use
+hyper-parameters, odd windows drive early stopping. The Phase~1 deep models use
 Adam~\cite{kingma2015adam} with gradient-norm clipping and keep the checkpoint with
 the best validation MAE. Graph WaveNet uses the published architecture; we use
 batch size 32 (instead of 64) to fit the 8\,GB unified memory of an Apple M3, and
@@ -36,9 +38,34 @@ Model & Settings \\
 \midrule
 Ridge & $\lambda\in\{10^{-2},1,10^{2},10^{3}\}$, standardised features, one model per horizon \\
 Grad.\ boosting & absolute loss; $(\nu,\text{leaves})\in\{(0.1,31),(0.1,127),(0.05,63)\}$; min leaf 100; $\ell_2{=}1$; $\le$400 (800 for $\nu{=}0.05$) iterations, early stopping (patience 20); one model per horizon \\
-LSTM & 2 layers, 64 units, dropout 0.1, MLP head; Adam lr $10^{-3}$, weight decay $10^{-4}$, batch 32, $\le$60 epochs, patience 10 \\
+LSTM & 2 layers, 64 units, dropout 0.1, MLP head, raw inputs, no graph; Adam lr $10^{-3}$, weight decay $10^{-4}$, batch 32, $\le$30 epochs of half the windows, patience 6 \\
 Graph WaveNet & 4 blocks $\times$ 2 layers, kernel 2, channels 32/32/256/512 (residual/dilation/skip/end), diffusion order 2, embedding dim 10, dropout 0.3; Adam lr $10^{-3}$, weight decay $10^{-4}$, clip 5, batch 32, $\le$35 epochs, patience 8 \\
-GWN ablation & as above, exactly 8 epochs for every variant \\
+XGBoost per segment & one multi-output model per sensor, vector-leaf trees, absolute loss, depth 6, $\nu{=}0.1$, $\le$400 trees, early stopping (patience 30), every 2nd training window \\
+ST-GAT & $d{=}64$, 2 ST blocks, $K_t{=}3$, 4+4 directional heads, node embedding 16, dropout 0.2, attention dropout 0.1; AdamW lr $10^{-3}$, weight decay $10^{-4}$, clip 5, batch 32, LR halving (patience 3), $\le$40 epochs of half the windows, patience 8 \\
+Hybrid & ST-GAT as above + base-forecast embedding and fusion GAT, zero-initialised head; out-of-fold XGBoost base (5 blocked folds, purge 23) \\
+Ablations & each ST-GAT / hybrid variant: exactly 12 epochs of half the windows, same seed \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\textbf{Fair comparison (Phase~2).} Every model, from Historical Average to the
+hybrid, receives the same 12-step (1-hour) history and forecasts the same 12
+horizons from the same anchors. The per-segment XGBoost uses 12 lags, as the ST-GAT
+does. All models use the same chronological split, and all metrics share the same
+missing-target mask. We report MAE, RMSE and MAPE at \emph{every} horizon,
+separately for \emph{peak} periods (weekdays 06:00--10:00 and 15:00--19:00, by target
+time) and off-peak, and for congested targets ($<$40\,mph). Pairwise differences are
+tested with Diebold--Mariano tests, and overall MAE gets a 95\,\% day-block bootstrap
+interval.
+
+\textbf{Training.} Deep models are trained with the masked MAE of
+Eq.~\eqref{eq:loss} in mph, batch size 32, AdamW (learning rate $10^{-3}$), and the
+regularisers of Section~\ref{sec:dldata}. Main runs train for at most 40 epochs, each
+on a random half of the training windows, with early stopping (patience 8) on
+validation MAE. Ablations share one fixed budget of 12 such epochs and the same seed,
+and the full model is re-trained under that budget so the rows are comparable. The
+per-segment XGBoost models train on every second training window with early stopping
+on every second validation window. All experiments ran on one Apple M3
+laptop (8\,GB unified memory, Metal GPU) with PyTorch~\cite{paszke2019}, XGBoost
+and scikit-learn~\cite{pedregosa2011}. The test split was used once, after all
+design decisions.
