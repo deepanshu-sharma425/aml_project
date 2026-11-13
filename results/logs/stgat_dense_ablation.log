@@ -1,0 +1,35 @@
+stgat_dense_ablation: 163,516 parameters, inputs=masked
+epoch   1  train 4.0153  val 3.3025  (44s)
+epoch   2  train 3.5164  val 3.1313  (45s)
+epoch   3  train 3.3668  val 3.0500  (46s)
+epoch   4  train 3.2439  val 2.9922  (45s)
+epoch   5  train 3.2059  val 2.9595  (44s)
+epoch   6  train 3.1809  val 2.9643  (46s)
+epoch   7  train 3.1487  val 2.9858  (47s)
+epoch   8  train 3.1204  val 2.9530  (46s)
+epoch   9  train 3.1084  val 2.9545  (46s)
+epoch  10  train 3.0829  val 2.9212  (44s)
+epoch  11  train 3.0822  val 2.9053  (47s)
+epoch  12  train 3.0878  val 2.9283  (47s)
+{
+  "15 min": {
+    "MAE": 2.8309173583984375,
+    "RMSE": 5.516257286071777,
+    "MAPE": 7.608726501464844
+  },
+  "30 min": {
+    "MAE": 3.193528175354004,
+    "RMSE": 6.507878303527832,
+    "MAPE": 9.114336967468262
+  },
+  "60 min": {
+    "MAE": 3.5602939128875732,
+    "RMSE": 7.441501140594482,
+    "MAPE": 10.677565574645996
+  },
+  "avg": {
+    "MAE": 3.1390442848205566,
+    "RMSE": 6.405959606170654,
+    "MAPE": 8.955248832702637
+  }
+}

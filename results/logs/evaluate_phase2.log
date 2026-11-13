@@ -1,0 +1,56 @@
+road graph: {'nodes': 207, 'directed_edges': 1515, 'one_way_fraction': 0.7333333333333333, 'mean_out_degree': 7.318840579710145, 'nodes_without_downstream': 5, 'nodes_without_upstream': 2, 'isolated_nodes': 1, 'weakly_connected_components': 2, 'strongly_connected_components': 13, 'mean_2hop_neighbours': 35.71980676328502, 'median_edge_km': 2.7578001022338867}
+gap: {
+ "h3_resid_corr_neighbours": 0.12698962879282966,
+ "h3_resid_corr_non_neighbours": 0.02047035792099681,
+ "h3_abs_corr_resid_own_anomaly": 0.06480225300481904,
+ "h3_abs_corr_resid_downstream_anomaly": 0.12268776945736716,
+ "h3_abs_corr_resid_upstream_anomaly": 0.08324715962671092,
+ "h3_abs_corr_resid_downstream_trend": 0.09338303136599382,
+ "h12_resid_corr_neighbours": 0.209712066820188,
+ "h12_resid_corr_non_neighbours": 0.03878877097703188,
+ "h12_abs_corr_resid_own_anomaly": 0.04832379658756493,
+ "h12_abs_corr_resid_downstream_anomaly": 0.08349243041344219,
+ "h12_abs_corr_resid_upstream_anomaly": 0.07093762696534953,
+ "h12_abs_corr_resid_downstream_trend": 0.04962757588791996
+}
+                       model  15 min MAE  30 min MAE  60 min MAE  avg MAE
+          Historical Average       4.186       4.186       4.186    4.186
+                 Persistence       3.498       4.205       5.378    4.241
+            Ridge (features)       3.371       3.780       4.093    3.686
+Gradient Boosting (features)       2.893       3.289       3.656    3.219
+         XGBoost per segment       2.888       3.258       3.638    3.201
+                        LSTM       3.018       3.625       4.530    3.627
+               Graph WaveNet       2.717       3.104       3.587    3.074
+                      ST-GAT       2.735       3.079       3.471    3.040
+              Hybrid XGB→GAT       2.724       3.095       3.516    3.057
+                       model  MAE60_latest_observed  MAE60_latest_missing  degradation_%
+          Historical Average                  4.171                 4.702         12.721
+                 Persistence                  5.305                 7.894         48.798
+            Ridge (features)                  4.060                 5.235         28.926
+Gradient Boosting (features)                  3.631                 4.499         23.898
+         XGBoost per segment                  3.606                 4.750         31.739
+                        LSTM                  4.460                 6.906         54.823
+               Graph WaveNet                  3.535                 5.359         51.580
+                      ST-GAT                  3.444                 4.410         28.073
+              Hybrid XGB→GAT                  3.482                 4.658         33.768
+                                 variant  15 min MAE  30 min MAE  60 min MAE  avg MAE
+             Road-graph attention (full)       2.757       3.125       3.528    3.083
+         Mean aggregation (no attention)       2.761       3.140       3.553    3.099
+Attention over all pairs (no road prior)       2.831       3.194       3.560    3.139
+                       No spatial module       2.855       3.249       3.706    3.204
+          Outages fed as 0 mph (no mask)       2.836       3.262       3.791    3.233
+                              variant  15 min MAE  30 min MAE  60 min MAE  avg MAE
+Full hybrid (OOF base, residual, GAT)       2.726       3.083       3.497    3.047
+             Correction without graph       2.843       3.206       3.602    3.158
+    Linear neighbour correction (LAD)       2.872       3.246       3.631    3.189
+     Base as input only (no residual)       2.754       3.100       3.525    3.070
+    In-sample base (no cross-fitting)       2.815       3.199       3.578    3.143
+            XGBoost per segment alone       2.888       3.258       3.638    3.201
+attention: {'down_neighbour_mass_congested': 0.8664039969444275, 'down_neighbour_mass_freeflow': 0.8372690677642822, 'down_neighbour_mass_all': 0.8398274779319763, 'up_neighbour_mass_congested': 0.873550534248352, 'up_neighbour_mass_freeflow': 0.8332657814025879, 'up_neighbour_mass_all': 0.8373656868934631}
+              policy  onsets  anticipated_%  median_lead_min  false_activation_%  switches_per_sensor_day  plan_on_%
+Reactive (speed now)    6554           0.00              0.0               10.63                     6.64      12.29
+ XGBoost per segment    6554          19.80             10.0                7.68                     4.13      10.57
+       Graph WaveNet    6554          39.20             10.0                5.91                     3.84      11.34
+              ST-GAT    6554          30.10             10.0                7.72                     3.44      10.98
+      Hybrid XGB→GAT    6554          35.72             10.0                6.00                     3.80      11.00
+Oracle (true future)    6554         100.00             15.0                0.00                     6.85      10.84

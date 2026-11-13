@@ -250,6 +250,7 @@ Model & 15 & 30 & 60 & avg \\
 \midrule
 Historical average & 4.19 & 4.19 & 4.19 & 4.19 \\
 Gradient boosting (features) & 2.89 & 3.29 & 3.66 & 3.22 \\
+LSTM (no graph) & 3.02 & 3.63 & 4.53 & 3.63 \\
 \textcolor{orange}{XGBoost per segment} & 2.89 & 3.26 & 3.64 & 3.20 \\
 Graph WaveNet & \textbf{2.72} & 3.10 & 3.59 & 3.07 \\
 \textcolor{accent}{ST-GAT (ours)} & 2.74 & \textbf{3.08} & \textbf{3.47} & \textbf{3.04} \\
@@ -260,7 +261,7 @@ Graph WaveNet & \textbf{2.72} & 3.10 & 3.59 & 3.07 \\
 \begin{itemize}\setlength\itemsep{0.4em}\small
 \item ST-GAT: \hl{$-5\,\%$} vs.\ per-segment XGBoost; hybrid $-4.5\,\%$.
 \item Diebold--Mariano vs.\ XGBoost: \hl{$p<0.001$} at 15, 30, 60 min.
-\item Hybrid best at 15 min among our GAT models; ST-GAT better at 30/60 min.
+\item Hybrid best at 15 min among our GAT models; ST-GAT better at 30/60 min after long training.
 \item ST-GAT 3.47 at 60 min: below Graph WaveNet (3.59) with half the parameters.
 \end{itemize}
 \end{columns}
@@ -297,30 +298,58 @@ Congested targets ($<$40 mph): graph models cut the error by 1--1.6 mph.
 \end{columns}
 \end{frame}
 
-\begin{frame}{Ablation: what is each design choice worth?}
-\kicker{Same 12-epoch budget, same seed; test MAE (mph)}
+\begin{frame}{Ablation: what is each part of ST-GAT worth?}
+\kicker{Ablation studies \textperiodcentered{} same 12-epoch budget, same seed; test MAE (mph)}
 \begin{columns}[T]
-\column{0.55\textwidth}
-\footnotesize\setlength{\tabcolsep}{4pt}
+\column{0.58\textwidth}
+\footnotesize\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{lcccc}
 \toprule
 ST-GAT variant & 15 & 30 & 60 & avg \\
 \midrule
-\textcolor{accent}{Road-graph attention (full)} & \textbf{2.76} & \textbf{3.13} & \textbf{3.53} & \textbf{3.08} \\
+\textcolor{accent}{Full (road-graph attention, masked)} & \textbf{2.76} & \textbf{3.12} & \textbf{3.53} & \textbf{3.08} \\
 Mean aggregation (no attention) & 2.76 & 3.14 & 3.55 & 3.10 \\
+Attention over all pairs (no road prior) & 2.83 & 3.19 & 3.56 & 3.14 \\
 No spatial module & 2.86 & 3.25 & 3.71 & 3.20 \\
+Outages fed as 0 mph (no mask) & 2.84 & 3.26 & 3.79 & 3.23 \\
 \bottomrule
-\end{tabular}\\[0.6em]
-\aside{Remaining runs (dense attention, unmasked inputs, 4 hybrid variants) are still training.}
-\column{0.42\textwidth}
-\begin{itemize}\setlength\itemsep{0.4em}\small
-\item \hl{The graph is what matters}: without it, MAE rises to 3.20, exactly the per-segment XGBoost level.
-\item Attention vs.\ plain neighbour averaging: only \hl{0.02 mph}. Most of the gain is \emph{which} sensors talk (the road prior), not how they are weighted.
+\end{tabular}
+\column{0.39\textwidth}
+\begin{itemize}\setlength\itemsep{0.35em}\small
+\item \hl{Outage masking} matters most: +0.26 at 60 min without it.
+\item \hl{No graph} $\Rightarrow$ 3.20, exactly per-segment XGBoost: the gain is the network.
+\item \hl{Road prior} beats attention over all pairs (+0.06).
+\item Attention vs.\ plain averaging: only 0.02.
 \end{itemize}
 \end{columns}
 \end{frame}
 
-%%ABLATION_SLIDES%%
+\begin{frame}{Ablation: why the hybrid is built this way}
+\kicker{Hybrid innovation \textperiodcentered{} every variant corrects the same XGBoost forecasts}
+\begin{columns}[T]
+\column{0.58\textwidth}
+\footnotesize\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccc}
+\toprule
+Hybrid variant & 15 & 30 & 60 & avg \\
+\midrule
+\textcolor{green}{Full (cross-fitted, residual, GAT)} & \textbf{2.73} & \textbf{3.08} & \textbf{3.50} & \textbf{3.05} \\
+Base as input only (no residual) & 2.75 & 3.10 & 3.52 & 3.07 \\
+In-sample base (no cross-fitting) & 2.82 & 3.20 & 3.58 & 3.14 \\
+Correction without graph & 2.84 & 3.21 & 3.60 & 3.16 \\
+Linear neighbour correction & 2.87 & 3.25 & 3.63 & 3.19 \\
+XGBoost per segment alone & 2.89 & 3.26 & 3.64 & 3.20 \\
+\bottomrule
+\end{tabular}
+\column{0.39\textwidth}
+\begin{itemize}\setlength\itemsep{0.35em}\small
+\item \hl{Graph} is essential: without it the correction barely helps.
+\item \hl{Cross-fitting} is essential: in-sample bases lose most of the gain.
+\item Residual connection: +0.02.
+\item Same budget: hybrid beats ST-GAT at \hl{every horizon} (3.05 vs.\ 3.08).
+\end{itemize}
+\end{columns}
+\end{frame}
 
 \begin{frame}{Validation and robustness}
 \kicker{Technical validation}

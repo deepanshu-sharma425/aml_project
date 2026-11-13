@@ -1,0 +1,13 @@
+{
+  "nodes": 207,
+  "directed_edges": 1515,
+  "one_way_fraction": 0.7333333333333333,
+  "mean_out_degree": 7.318840579710145,
+  "nodes_without_downstream": 5,
+  "nodes_without_upstream": 2,
+  "isolated_nodes": 1,
+  "weakly_connected_components": 2,
+  "strongly_connected_components": 13,
+  "mean_2hop_neighbours": 35.71980676328502,
+  "median_edge_km": 2.7578001022338867
+}

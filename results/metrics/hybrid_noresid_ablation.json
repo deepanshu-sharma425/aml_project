@@ -1,0 +1,57 @@
+{
+  "model": "hybrid_noresid_ablation",
+  "params": 181052,
+  "epochs_run": 12,
+  "best_epoch": 10,
+  "best_val_mae": 2.9162423610687256,
+  "train_sec": 901.934531211853,
+  "infer_sec": 12.220375776290894,
+  "args": {
+    "model": "stgat",
+    "variant": "full",
+    "spatial": "attention",
+    "inputs": "masked",
+    "base": "xgb_oof",
+    "residual": "False",
+    "epochs": "12",
+    "patience": "1000",
+    "lr": "0.001",
+    "weight_decay": "0.0001",
+    "optimizer": "adamw",
+    "lr_patience": "3",
+    "dropout": "0.2",
+    "attn_dropout": "0.1",
+    "heads": "4",
+    "node_emb": "16",
+    "batch_size": "32",
+    "epoch_fraction": "0.5",
+    "hidden": "64",
+    "seed": "0",
+    "tag": "main",
+    "name": "hybrid_noresid_ablation",
+    "eval_only": "False",
+    "out": "/Users/deepanshu./Desktop/aml_project/results"
+  },
+  "metrics": {
+    "15 min": {
+      "MAE": 2.7542102336883545,
+      "RMSE": 5.2664570808410645,
+      "MAPE": 7.467830181121826
+    },
+    "30 min": {
+      "MAE": 3.100400686264038,
+      "RMSE": 6.230465888977051,
+      "MAPE": 8.856523513793945
+    },
+    "60 min": {
+      "MAE": 3.524571418762207,
+      "RMSE": 7.250749588012695,
+      "MAPE": 10.625782012939453
+    },
+    "avg": {
+      "MAE": 3.0699071884155273,
+      "RMSE": 6.174531936645508,
+      "MAPE": 8.770598411560059
+    }
+  }
+}

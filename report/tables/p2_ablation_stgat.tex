@@ -1,0 +1,17 @@
+\begin{table*}[t]
+\centering
+\caption{ST-GAT ablation: what each design choice is worth. Identical training budget and seed; test MAE (mph).}
+\label{tab:p2abl_stgat}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrcccc}
+\toprule
+Variant & Params & 15 min & 30 min & 60 min & Avg \\
+\midrule
+Road-graph attention (full) & 163k & \textbf{2.76} & \textbf{3.12} & \textbf{3.53} & \textbf{3.08} \\
+Mean aggregation (no attention) & 163k & 2.76 & 3.14 & 3.55 & 3.10 \\
+Attention over all pairs (no road prior) & 163k & 2.83 & 3.19 & 3.56 & 3.14 \\
+No spatial module & 146k & 2.86 & 3.25 & 3.71 & 3.20 \\
+Outages fed as 0 mph (no mask) & 163k & 2.84 & 3.26 & 3.79 & 3.23 \\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -1,0 +1,14 @@
+{
+  "h3_resid_corr_neighbours": 0.12698962879282966,
+  "h3_resid_corr_non_neighbours": 0.02047035792099681,
+  "h3_abs_corr_resid_own_anomaly": 0.06480225300481904,
+  "h3_abs_corr_resid_downstream_anomaly": 0.12268776945736716,
+  "h3_abs_corr_resid_upstream_anomaly": 0.08324715962671092,
+  "h3_abs_corr_resid_downstream_trend": 0.09338303136599382,
+  "h12_resid_corr_neighbours": 0.209712066820188,
+  "h12_resid_corr_non_neighbours": 0.03878877097703188,
+  "h12_abs_corr_resid_own_anomaly": 0.04832379658756493,
+  "h12_abs_corr_resid_downstream_anomaly": 0.08349243041344219,
+  "h12_abs_corr_resid_upstream_anomaly": 0.07093762696534953,
+  "h12_abs_corr_resid_downstream_trend": 0.04962757588791996
+}

@@ -1,0 +1,53 @@
+lstm_main: 55,628 parameters, inputs=raw
+epoch   1  train 4.6642  val 3.9745  (26s)
+epoch   2  train 4.0373  val 3.8702  (28s)
+epoch   3  train 3.8275  val 3.5499  (24s)
+epoch   4  train 3.7099  val 3.5153  (22s)
+epoch   5  train 3.6837  val 3.4856  (22s)
+epoch   6  train 3.6597  val 3.4856  (22s)
+epoch   7  train 3.6490  val 3.4985  (22s)
+epoch   8  train 3.6289  val 3.4555  (22s)
+epoch   9  train 3.6344  val 3.4466  (23s)
+epoch  10  train 3.6250  val 3.4598  (22s)
+epoch  11  train 3.6206  val 3.4322  (22s)
+epoch  12  train 3.6171  val 3.4138  (22s)
+epoch  13  train 3.5670  val 3.4217  (26s)
+epoch  14  train 3.5781  val 3.4691  (27s)
+epoch  15  train 3.5810  val 3.4239  (24s)
+epoch  16  train 3.5546  val 3.3696  (22s)
+epoch  17  train 3.5284  val 3.3971  (22s)
+epoch  18  train 3.5263  val 3.3978  (22s)
+epoch  19  train 3.4829  val 3.3243  (22s)
+epoch  20  train 3.5020  val 3.3153  (22s)
+epoch  21  train 3.5030  val 3.3213  (22s)
+epoch  22  train 3.4963  val 3.3228  (23s)
+epoch  23  train 3.4893  val 3.3294  (23s)
+epoch  24  train 3.4803  val 3.3303  (24s)
+epoch  25  train 3.4777  val 3.3143  (22s)
+epoch  26  train 3.4811  val 3.3044  (21s)
+epoch  27  train 3.4810  val 3.3126  (21s)
+epoch  28  train 3.4609  val 3.3082  (21s)
+epoch  29  train 3.4613  val 3.3044  (21s)
+epoch  30  train 3.4741  val 3.3590  (21s)
+{
+  "15 min": {
+    "MAE": 3.0175745487213135,
+    "RMSE": 5.961804389953613,
+    "MAPE": 8.04667854309082
+  },
+  "30 min": {
+    "MAE": 3.624605417251587,
+    "RMSE": 7.370828151702881,
+    "MAPE": 10.243226051330566
+  },
+  "60 min": {
+    "MAE": 4.529522895812988,
+    "RMSE": 9.143304824829102,
+    "MAPE": 13.711610794067383
+  },
+  "avg": {
+    "MAE": 3.6265010833740234,
+    "RMSE": 7.4089460372924805,
+    "MAPE": 10.316254615783691
+  }
+}

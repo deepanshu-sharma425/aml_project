@@ -420,7 +420,7 @@ def ablations(y):
         body = [f"{r.variant} & " + ("--" if np.isnan(r.params) else f"{int(r.params) // 1000}k") + " & "
                 + " & ".join(b[c][i] for c in cols) for i, r in df.iterrows()]
         (TEX / f"p2_ablation_{name}.tex").write_text(tex_table(
-            body, r"Variant & Params & 15 min & 30 min & 60 min & Avg", cap, label, "lrcccc"))
+            body, r"Variant & Params & 15 min & 30 min & 60 min & Avg", cap, label, "lrcccc", wide=True))
         print(df[["variant"] + cols].round(3).to_string(index=False))
         out[name] = df
     return out

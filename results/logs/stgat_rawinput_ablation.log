@@ -1,0 +1,35 @@
+stgat_rawinput_ablation: 163,260 parameters, inputs=raw
+epoch   1  train 4.1030  val 3.3875  (60s)
+epoch   2  train 3.6681  val 3.2907  (59s)
+epoch   3  train 3.5701  val 3.3238  (60s)
+epoch   4  train 3.4585  val 3.1539  (60s)
+epoch   5  train 3.3717  val 3.1241  (60s)
+epoch   6  train 3.3190  val 3.0375  (61s)
+epoch   7  train 3.2771  val 3.0351  (62s)
+epoch   8  train 3.2359  val 2.9827  (62s)
+epoch   9  train 3.2168  val 2.9833  (59s)
+epoch  10  train 3.1873  val 2.9630  (63s)
+epoch  11  train 3.1811  val 2.9799  (61s)
+epoch  12  train 3.1841  val 2.9917  (62s)
+{
+  "15 min": {
+    "MAE": 2.8364648818969727,
+    "RMSE": 5.406607151031494,
+    "MAPE": 7.539792537689209
+  },
+  "30 min": {
+    "MAE": 3.2622108459472656,
+    "RMSE": 6.498359203338623,
+    "MAPE": 9.156875610351562
+  },
+  "60 min": {
+    "MAE": 3.790642738342285,
+    "RMSE": 7.687418460845947,
+    "MAPE": 11.336250305175781
+  },
+  "avg": {
+    "MAE": 3.232818603515625,
+    "RMSE": 6.464612007141113,
+    "MAPE": 9.082663536071777
+  }
+}

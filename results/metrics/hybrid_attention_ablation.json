@@ -1,0 +1,57 @@
+{
+  "model": "hybrid_attention_ablation",
+  "params": 181052,
+  "epochs_run": 12,
+  "best_epoch": 11,
+  "best_val_mae": 2.892702579498291,
+  "train_sec": 870.4826340675354,
+  "infer_sec": 11.581373929977417,
+  "args": {
+    "model": "stgat",
+    "variant": "full",
+    "spatial": "attention",
+    "inputs": "masked",
+    "base": "xgb_oof",
+    "residual": "True",
+    "epochs": "12",
+    "patience": "1000",
+    "lr": "0.001",
+    "weight_decay": "0.0001",
+    "optimizer": "adamw",
+    "lr_patience": "3",
+    "dropout": "0.2",
+    "attn_dropout": "0.1",
+    "heads": "4",
+    "node_emb": "16",
+    "batch_size": "32",
+    "epoch_fraction": "0.5",
+    "hidden": "64",
+    "seed": "0",
+    "tag": "main",
+    "name": "hybrid_attention_ablation",
+    "eval_only": "False",
+    "out": "/Users/deepanshu./Desktop/aml_project/results"
+  },
+  "metrics": {
+    "15 min": {
+      "MAE": 2.725512742996216,
+      "RMSE": 5.226814270019531,
+      "MAPE": 7.195704460144043
+    },
+    "30 min": {
+      "MAE": 3.08251690864563,
+      "RMSE": 6.199880123138428,
+      "MAPE": 8.728172302246094
+    },
+    "60 min": {
+      "MAE": 3.4971935749053955,
+      "RMSE": 7.229400634765625,
+      "MAPE": 10.5355224609375
+    },
+    "avg": {
+      "MAE": 3.046844244003296,
+      "RMSE": 6.149569988250732,
+      "MAPE": 8.60873794555664
+    }
+  }
+}

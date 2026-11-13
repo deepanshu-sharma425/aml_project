@@ -1,0 +1,57 @@
+{
+  "model": "lstm_main",
+  "params": 55628,
+  "epochs_run": 30,
+  "best_epoch": 29,
+  "best_val_mae": 3.304377555847168,
+  "train_sec": 686.4424870014191,
+  "infer_sec": 4.171903848648071,
+  "args": {
+    "model": "lstm",
+    "variant": "full",
+    "spatial": "attention",
+    "inputs": "raw",
+    "base": "None",
+    "residual": "True",
+    "epochs": "30",
+    "patience": "6",
+    "lr": "0.001",
+    "weight_decay": "0.0001",
+    "optimizer": "adam",
+    "lr_patience": "None",
+    "dropout": "0.2",
+    "attn_dropout": "0.1",
+    "heads": "4",
+    "node_emb": "16",
+    "batch_size": "32",
+    "epoch_fraction": "0.5",
+    "hidden": "64",
+    "seed": "0",
+    "tag": "main",
+    "name": "lstm_main",
+    "eval_only": "False",
+    "out": "/Users/deepanshu./Desktop/aml_project/results"
+  },
+  "metrics": {
+    "15 min": {
+      "MAE": 3.0175745487213135,
+      "RMSE": 5.961804389953613,
+      "MAPE": 8.04667854309082
+    },
+    "30 min": {
+      "MAE": 3.624605417251587,
+      "RMSE": 7.370828151702881,
+      "MAPE": 10.243226051330566
+    },
+    "60 min": {
+      "MAE": 4.529522895812988,
+      "RMSE": 9.143304824829102,
+      "MAPE": 13.711610794067383
+    },
+    "avg": {
+      "MAE": 3.6265010833740234,
+      "RMSE": 7.4089460372924805,
+      "MAPE": 10.316254615783691
+    }
+  }
+}

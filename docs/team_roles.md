@@ -65,8 +65,9 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
   15 min (2.72); better than XGBoost at 79 % of sensors; in-sample 2.69 vs out-of-fold
   2.99 mph (why cross-fitting is needed)
 - **Viva:** sections 3 and 9. Be ready for the hardest question: *why is the hybrid not
-  better than ST-GAT at 30 and 60 min?* (learning curve: validation plateaus while training
-  keeps falling).
+  better than ST-GAT at 30 and 60 min?* With the same 12-epoch budget it *is* better at
+  every horizon (3.05 vs 3.08); with long training it starts to overfit (validation
+  plateaus while training keeps falling).
 
 ## Member 4: ablations, statistics and tests
 
@@ -83,8 +84,9 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
   ablation MAE from 3.08 to 3.20 mph; outage degradation 52 % (Graph WaveNet) vs 28 % (ST-GAT)
 - **Viva:** sections 5, 6 and the bootstrap question in 9. Be ready for: why
   Newey-West, why day blocks, what each ablation removes, why ablations share one budget.
-- **Open task:** when `run_phase2.sh` finishes, check `results/tables/p2_ablation_*.csv`
-  against the report and slides.
+- **Ablation numbers to know:** ST-GAT full 3.08, mean aggregation 3.10, all-pairs attention
+  3.14, no graph 3.20, outages as 0 mph 3.23; hybrid full 3.05, no residual 3.07, no
+  cross-fitting 3.14, no graph 3.16 (`results/tables/p2_ablation_*.csv`).
 
 ## Member 5: literature, deliverables and the final package
 

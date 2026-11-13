@@ -15,7 +15,12 @@ graph network corrects the per-segment forecasts, cross-fitting prevents the
 second stage from learning on optimistic in-sample residuals, and a zero-initialised
 correction starts exactly at the XGBoost forecast. It is the most accurate of our
 graph-attention models at 15\,min, but at longer horizons the stand-alone ST-GAT is
-better, so the simple residual design does not dominate. %%CONCLUSION_ABLATION%%
+better, so the simple residual design does not dominate. The ablations explain where
+the gains come from: outage masking and the road graph matter most (removing either
+costs 0.12--0.15\,mph), the road prior beats unrestricted attention, and attention
+adds little over averaging the same neighbours. In the hybrid, the graph and
+cross-fitting are both essential, and under an equal, short training budget the
+hybrid is more accurate than ST-GAT at every horizon.
 
 \textbf{Limitations.} Each configuration was trained with one seed on one laptop, so
 the tests and intervals capture uncertainty over test days but not over training

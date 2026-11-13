@@ -39,7 +39,10 @@ horizon with $p<0.001$ (Table~\ref{tab:p2dm}), and the hybrid is more accurate t
 XGBoost at 79\,\% of the sensors at 60\,min, most strongly along the congested
 central corridor (Fig.~\ref{fig:p2improve}). The two independent tabular models are
 close to each other (3.20 vs.\ 3.22\,mph), so the gain comes from the network, not
-from a better tabular learner.
+from a better tabular learner. Depth alone does not explain it either: the LSTM, which sees each
+sensor's own raw history only, reaches 3.02\,mph at 15\,min but 4.53\,mph at 60\,min,
+worse than ridge regression (4.09), in line with the published FC-LSTM on METR-LA
+(3.44 and 4.37\,mph~\cite{li2018dcrnn}).
 
 \textbf{Among the network models the ranking depends on the horizon.} The hybrid is
 the most accurate of our models at 15\,min (2.72\,mph), significantly better than
@@ -98,37 +101,39 @@ reading is missing, Graph WaveNet's 60-minute MAE rises by 52\,\%, ST-GAT's by o
 \label{sec:p2abl}
 All ablation variants are trained for the same 12 epochs (each on a random half of
 the training windows) with the same seed, and the full model is retrained under that
-budget, so the rows are directly comparable. The completed ST-GAT ablations so far:
+budget, so the rows of Tables~\ref{tab:p2abl_stgat} and~\ref{tab:p2abl_hybrid} are
+directly comparable.
 
-\begin{table}[t]
-\centering
-\caption{ST-GAT ablation (completed variants): test MAE (mph), identical 12-epoch
-budget and seed.}
-\label{tab:p2abl_partial}
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{lcccc}
-\toprule
-Variant & 15 min & 30 min & 60 min & Avg \\
-\midrule
-Road-graph attention (full) & \textbf{2.76} & \textbf{3.13} & \textbf{3.53} & \textbf{3.08} \\
-Mean aggregation (no attention) & 2.76 & 3.14 & 3.55 & 3.10 \\
-No spatial module & 2.86 & 3.25 & 3.71 & 3.20 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{tables/p2_ablation_stgat}
+\input{tables/p2_ablation_hybrid}
 
-\textbf{The graph is what matters.} Removing the spatial module, with everything
-else unchanged, raises the average MAE from 3.08 to 3.20\,mph and the 60-minute MAE
-from 3.53 to 3.71\,mph; the network then performs exactly like the independent
-XGBoost per segment (3.20). \textbf{Attention adds little over averaging.} Replacing
-the learned coefficients with a uniform average over the same road neighbours costs
-only 0.02\,mph on average (0.03 at 60\,min). Most of the gain comes from which
-sensors exchange information, i.e.\ the road-graph prior, and only a small part from
-weighting them adaptively, which is consistent with the small shift of the attention
-weights reported below. The remaining ablations (dense attention without the road
-prior, unmasked inputs, and the four hybrid variants) are still running and will be
-added to this section.
-%%ABLATIONS%%
+\textbf{ST-GAT (Table~\ref{tab:p2abl_stgat}).} Every design choice pays, and their
+ranking is informative. \emph{Outage masking} matters most: feeding missing readings
+as 0\,mph raises the average MAE from 3.08 to 3.23\,mph and the 60-minute MAE from
+3.53 to 3.79, worse than removing the graph altogether. \emph{The graph} comes next:
+without any spatial module the network falls to 3.20\,mph, exactly the level of the
+independent XGBoost models, so the network-aware gain of Section~\ref{sec:p2gap} is
+due to information crossing between segments and not to the deep architecture.
+\emph{The road-graph prior} helps: attention over all $207{\times}207$ pairs instead of
+road neighbours costs 0.06\,mph (0.07 at 15\,min). \emph{Attention itself} adds only
+0.02\,mph over a uniform average of the same neighbours, consistent with the small
+shift of the attention weights reported below: most of the gain comes from
+\emph{which} sensors exchange information, not from how they are weighted.
+
+\textbf{Hybrid (Table~\ref{tab:p2abl_hybrid}).} The graph is what makes the hybrid
+work: a correction network without spatial layers improves XGBoost only from 3.20 to
+3.16\,mph, and a linear median regression on neighbour anomalies only to 3.19,
+against 3.05 with graph attention. \emph{Cross-fitting} is essential: trained on
+in-sample XGBoost forecasts, which are 10\,\% more accurate than out-of-sample ones,
+the correction learns to trust the base too much and loses most of its gain
+(3.14\,mph). The \emph{residual} connection adds a further 0.02\,mph over feeding the
+XGBoost forecast as an input only. Finally, under the same 12-epoch budget the hybrid
+is more accurate than ST-GAT at every horizon (2.73/3.08/3.50 vs.\ 2.76/3.12/3.53\,mph).
+With the longer budget of the main runs ST-GAT catches up and overtakes it at 30 and
+60\,min, while the hybrid begins to overfit its residuals (Section~\ref{sec:p2train});
+the 12-epoch hybrid is in fact slightly better on test than the 40-epoch one
+(3.047 vs.\ 3.057\,mph). Combining a strong tabular model with graph attention
+therefore speeds up learning and helps most when training is short.
 
 \subsection{Congestion maps and attention}
 Fig.~\ref{fig:congmap} shows the busiest weekday evening window of the test period and
@@ -182,6 +187,7 @@ movements or signal timings, so we make no claim about delay, throughput or live
 control.
 
 \subsection{Training behaviour}
+\label{sec:p2train}
 Fig.~\ref{fig:curves} shows the learning curves. ST-GAT's validation MAE is below its
 training MAE throughout (dropout is active in training) and flattens after about 30
 epochs; two learning-rate halvings give small further gains. The hybrid starts at the

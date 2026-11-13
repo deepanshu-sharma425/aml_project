@@ -1,0 +1,20 @@
+skip stgat_attention_main (results exist)
+skip hybrid_attention_main (results exist)
+=== stgat_attention_ablation  21:17
+=== stgat_none_ablation  21:30
+=== stgat_mean_ablation  21:34
+=== stgat_dense_ablation  21:43
+skip stgat_attention_main (results exist)
+skip hybrid_attention_main (results exist)
+skip stgat_attention_ablation (results exist)
+skip stgat_none_ablation (results exist)
+skip stgat_mean_ablation (results exist)
+=== stgat_dense_ablation  18:06
+=== stgat_rawinput_ablation  18:15
+=== hybrid_attention_ablation  18:28
+=== hybrid_none_ablation  18:42
+=== hybrid_noresid_ablation  18:47
+=== hybrid_insample_ablation  19:03
+=== lstm_main  19:18
+=== evaluate  19:30
+=== all done  19:41

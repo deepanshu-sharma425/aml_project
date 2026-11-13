@@ -1,0 +1,35 @@
+hybrid_none_ablation: 155,708 parameters, inputs=masked
+epoch   1  train 2.9726  val 3.0493  (24s)
+epoch   2  train 2.9872  val 3.0387  (25s)
+epoch   3  train 2.9897  val 3.0352  (23s)
+epoch   4  train 2.9502  val 3.0220  (24s)
+epoch   5  train 2.9522  val 3.0212  (23s)
+epoch   6  train 2.9540  val 3.0231  (23s)
+epoch   7  train 2.9461  val 3.0208  (25s)
+epoch   8  train 2.9370  val 3.0113  (25s)
+epoch   9  train 2.9376  val 3.0155  (24s)
+epoch  10  train 2.9302  val 3.0193  (24s)
+epoch  11  train 2.9326  val 3.0052  (24s)
+epoch  12  train 2.9480  val 3.0122  (24s)
+{
+  "15 min": {
+    "MAE": 2.843468427658081,
+    "RMSE": 5.6337175369262695,
+    "MAPE": 7.873023986816406
+  },
+  "30 min": {
+    "MAE": 3.206207036972046,
+    "RMSE": 6.610283374786377,
+    "MAPE": 9.40565299987793
+  },
+  "60 min": {
+    "MAE": 3.6021664142608643,
+    "RMSE": 7.543255805969238,
+    "MAPE": 11.160856246948242
+  },
+  "avg": {
+    "MAE": 3.1578280925750732,
+    "RMSE": 6.5063018798828125,
+    "MAPE": 9.244343757629395
+  }
+}

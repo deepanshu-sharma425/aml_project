@@ -25,6 +25,7 @@ history.
 | Persistence | 3.50 | 4.21 | 5.38 | 4.24 |
 | Ridge (our features) | 3.37 | 3.78 | 4.09 | 3.69 |
 | Gradient boosting (our features) | 2.89 | 3.29 | 3.66 | 3.22 |
+| LSTM (own history only, no graph) | 3.02 | 3.63 | 4.53 | 3.63 |
 | **XGBoost per segment** (207 independent models) | 2.89 | 3.26 | 3.64 | 3.20 |
 | Graph WaveNet | **2.72** | 3.10 | 3.59 | 3.07 |
 | **ST-GAT** (graph attention, ours) | 2.74 | **3.08** | **3.47** | **3.04** |
@@ -42,6 +43,13 @@ What we found:
 - **The hybrid is best at 15 minutes** among our graph-attention models, but ST-GAT on
   its own is better at 30 and 60 minutes. ST-GAT is also the best model at 60 minutes
   overall (3.47 vs 3.59 for Graph WaveNet) with about half the parameters.
+- **Ablations show where the gain comes from.** With the same short training budget for
+  every variant: removing the graph from ST-GAT takes it back to the per-segment level
+  (3.08 → 3.20 mph), feeding outages as 0 mph is even worse (3.23), attention over all
+  sensor pairs instead of road neighbours costs 0.06, and attention itself adds only 0.02
+  over plain neighbour averaging. For the hybrid, the graph (3.05 vs 3.16 without it) and
+  cross-fitting (3.05 vs 3.14 without it) are both essential, and at this equal budget the
+  hybrid beats ST-GAT at every horizon.
 - **Masking outages helps.** When a sensor's latest reading is missing, Graph WaveNet
   (which sees an outage as 0 mph) gets 52% worse at 60 minutes, ST-GAT only 28%.
 - **Simulated signal control.** In an offline replay of the test period, a controller

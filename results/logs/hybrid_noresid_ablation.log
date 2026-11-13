@@ -1,0 +1,35 @@
+hybrid_noresid_ablation: 181,052 parameters, inputs=masked
+epoch   1  train 3.3607  val 3.0607  (71s)
+epoch   2  train 3.1240  val 3.0288  (72s)
+epoch   3  train 3.1122  val 3.0503  (71s)
+epoch   4  train 3.0613  val 3.0162  (69s)
+epoch   5  train 3.0494  val 3.0140  (73s)
+epoch   6  train 3.0394  val 2.9715  (74s)
+epoch   7  train 3.0195  val 2.9823  (71s)
+epoch   8  train 2.9972  val 2.9350  (71s)
+epoch   9  train 2.9873  val 2.9605  (70s)
+epoch  10  train 2.9715  val 2.9162  (70s)
+epoch  11  train 2.9656  val 2.9312  (97s)
+epoch  12  train 2.9722  val 2.9278  (92s)
+{
+  "15 min": {
+    "MAE": 2.7542102336883545,
+    "RMSE": 5.2664570808410645,
+    "MAPE": 7.467830181121826
+  },
+  "30 min": {
+    "MAE": 3.100400686264038,
+    "RMSE": 6.230465888977051,
+    "MAPE": 8.856523513793945
+  },
+  "60 min": {
+    "MAE": 3.524571418762207,
+    "RMSE": 7.250749588012695,
+    "MAPE": 10.625782012939453
+  },
+  "avg": {
+    "MAE": 3.0699071884155273,
+    "RMSE": 6.174531936645508,
+    "MAPE": 8.770598411560059
+  }
+}

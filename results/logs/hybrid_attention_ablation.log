@@ -1,0 +1,35 @@
+hybrid_attention_ablation: 181,052 parameters, inputs=masked
+epoch   1  train 2.9689  val 3.0295  (76s)
+epoch   2  train 2.9693  val 2.9887  (76s)
+epoch   3  train 2.9600  val 2.9926  (74s)
+epoch   4  train 2.9133  val 2.9586  (74s)
+epoch   5  train 2.9049  val 2.9467  (73s)
+epoch   6  train 2.8986  val 2.9331  (73s)
+epoch   7  train 2.8866  val 2.9463  (73s)
+epoch   8  train 2.8726  val 2.9168  (70s)
+epoch   9  train 2.8657  val 2.9380  (70s)
+epoch  10  train 2.8539  val 2.9096  (72s)
+epoch  11  train 2.8512  val 2.8927  (70s)
+epoch  12  train 2.8611  val 2.8959  (69s)
+{
+  "15 min": {
+    "MAE": 2.725512742996216,
+    "RMSE": 5.226814270019531,
+    "MAPE": 7.195704460144043
+  },
+  "30 min": {
+    "MAE": 3.08251690864563,
+    "RMSE": 6.199880123138428,
+    "MAPE": 8.728172302246094
+  },
+  "60 min": {
+    "MAE": 3.4971935749053955,
+    "RMSE": 7.229400634765625,
+    "MAPE": 10.5355224609375
+  },
+  "avg": {
+    "MAE": 3.046844244003296,
+    "RMSE": 6.149569988250732,
+    "MAPE": 8.60873794555664
+  }
+}

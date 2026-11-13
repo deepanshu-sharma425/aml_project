@@ -1,0 +1,18 @@
+\begin{table*}[t]
+\centering
+\caption{Hybrid ablation. Every variant corrects the same per-segment XGBoost forecasts; test MAE (mph).}
+\label{tab:p2abl_hybrid}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrcccc}
+\toprule
+Variant & Params & 15 min & 30 min & 60 min & Avg \\
+\midrule
+Full hybrid (OOF base, residual, GAT) & 181k & \textbf{2.73} & \textbf{3.08} & \textbf{3.50} & \textbf{3.05} \\
+Correction without graph & 155k & 2.84 & 3.21 & 3.60 & 3.16 \\
+Linear neighbour correction (LAD) & -- & 2.87 & 3.25 & 3.63 & 3.19 \\
+Base as input only (no residual) & 181k & 2.75 & 3.10 & 3.52 & 3.07 \\
+In-sample base (no cross-fitting) & 181k & 2.82 & 3.20 & 3.58 & 3.14 \\
+XGBoost per segment alone & -- & 2.89 & 3.26 & 3.64 & 3.20 \\
+\bottomrule
+\end{tabular}
+\end{table*}
