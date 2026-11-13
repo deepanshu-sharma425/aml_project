@@ -1,0 +1,35 @@
+stgat_none_ablation: 146,620 parameters, inputs=masked
+epoch   1  train 3.9981  val 3.4030  (23s)
+epoch   2  train 3.5701  val 3.1464  (24s)
+epoch   3  train 3.3882  val 3.1695  (23s)
+epoch   4  train 3.2764  val 3.1075  (24s)
+epoch   5  train 3.2357  val 3.0671  (23s)
+epoch   6  train 3.2181  val 3.0574  (23s)
+epoch   7  train 3.1838  val 3.0665  (24s)
+epoch   8  train 3.1572  val 3.0289  (24s)
+epoch   9  train 3.1459  val 3.0206  (24s)
+epoch  10  train 3.1295  val 3.0103  (24s)
+epoch  11  train 3.1279  val 3.0466  (24s)
+epoch  12  train 3.1332  val 3.0400  (24s)
+{
+  "15 min": {
+    "MAE": 2.855257511138916,
+    "RMSE": 5.610866069793701,
+    "MAPE": 7.761006832122803
+  },
+  "30 min": {
+    "MAE": 3.248509645462036,
+    "RMSE": 6.67437744140625,
+    "MAPE": 9.465677261352539
+  },
+  "60 min": {
+    "MAE": 3.7057747840881348,
+    "RMSE": 7.733864784240723,
+    "MAPE": 11.493977546691895
+  },
+  "avg": {
+    "MAE": 3.2037253379821777,
+    "RMSE": 6.582856178283691,
+    "MAPE": 9.315584182739258
+  }
+}

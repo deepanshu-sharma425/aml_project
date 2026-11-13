@@ -1,0 +1,63 @@
+hybrid_attention_main: 181,052 parameters, inputs=masked
+epoch   1  train 2.9689  val 3.0295  (73s)
+epoch   2  train 2.9693  val 2.9887  (67s)
+epoch   3  train 2.9600  val 2.9926  (67s)
+epoch   4  train 2.9133  val 2.9586  (70s)
+epoch   5  train 2.9049  val 2.9467  (80s)
+epoch   6  train 2.8986  val 2.9331  (72s)
+epoch   7  train 2.8866  val 2.9463  (71s)
+epoch   8  train 2.8726  val 2.9168  (68s)
+epoch   9  train 2.8657  val 2.9380  (67s)
+epoch  10  train 2.8539  val 2.9096  (66s)
+epoch  11  train 2.8512  val 2.8927  (67s)
+epoch  12  train 2.8611  val 2.8959  (69s)
+epoch  13  train 2.8236  val 2.9024  (72s)
+epoch  14  train 2.8324  val 2.8994  (69s)
+epoch  15  train 2.8306  val 2.8912  (71s)
+epoch  16  train 2.8150  val 2.8865  (71s)
+epoch  17  train 2.7981  val 2.8931  (70s)
+epoch  18  train 2.8107  val 2.8889  (68s)
+epoch  19  train 2.7843  val 2.8859  (67s)
+epoch  20  train 2.8020  val 2.8824  (67s)
+epoch  21  train 2.8054  val 2.8940  (69s)
+epoch  22  train 2.7991  val 2.8841  (68s)
+epoch  23  train 2.7917  val 2.8916  (70s)
+epoch  24  train 2.7882  val 2.8860  (68s)
+epoch  25  train 2.7647  val 2.8707  (67s)
+epoch  26  train 2.7589  val 2.8868  (66s)
+epoch  27  train 2.7571  val 2.8721  (66s)
+epoch  28  train 2.7370  val 2.8713  (392s)
+epoch  29  train 2.7428  val 2.8801  (71s)
+epoch  30  train 2.7360  val 2.8674  (68s)
+epoch  31  train 2.7257  val 2.8721  (6350s)
+epoch  32  train 2.7247  val 2.8671  (72s)
+epoch  33  train 2.7274  val 2.8680  (68s)
+epoch  34  train 2.7251  val 2.8802  (70s)
+epoch  35  train 2.7116  val 2.8761  (69s)
+epoch  36  train 2.7385  val 2.8694  (68s)
+epoch  37  train 2.7125  val 2.8687  (69s)
+epoch  38  train 2.7109  val 2.8726  (68s)
+epoch  39  train 2.7118  val 2.8651  (68s)
+epoch  40  train 2.6951  val 2.8686  (66s)
+{
+  "15 min": {
+    "MAE": 2.724000930786133,
+    "RMSE": 5.234583854675293,
+    "MAPE": 7.218130588531494
+  },
+  "30 min": {
+    "MAE": 3.094794511795044,
+    "RMSE": 6.290754795074463,
+    "MAPE": 8.769444465637207
+  },
+  "60 min": {
+    "MAE": 3.5156497955322266,
+    "RMSE": 7.350771427154541,
+    "MAPE": 10.565098762512207
+  },
+  "avg": {
+    "MAE": 3.0565152168273926,
+    "RMSE": 6.232922077178955,
+    "MAPE": 8.640215873718262
+  }
+}

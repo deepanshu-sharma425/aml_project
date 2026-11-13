@@ -77,3 +77,32 @@ def per_step_abs_error(y_pred: np.ndarray, y_true: np.ndarray, h: int) -> np.nda
     err = np.where(m, np.abs(p - t), 0.0).sum(1)
     cnt = m.sum(1)
     return np.where(cnt > 0, err / np.maximum(cnt, 1), np.nan)
+
+
+def subset_metrics(y_pred: np.ndarray, y_true: np.ndarray, keep: np.ndarray) -> dict[str, float]:
+    """MAE / RMSE / MAPE over observed targets where ``keep`` is True (broadcastable)."""
+    m = _mask(y_true) & np.broadcast_to(keep, y_true.shape)
+    e = y_pred[m] - y_true[m]
+    return {"MAE": float(np.abs(e).mean()), "RMSE": float(np.sqrt(np.square(e).mean())),
+            "MAPE": float((np.abs(e) / y_true[m]).mean() * 100), "n": int(m.sum())}
+
+
+def is_peak(hour: np.ndarray, dayofweek: np.ndarray) -> np.ndarray:
+    """Weekday AM (06:00-10:00) or PM (15:00-19:00) peak, from target-time hour and weekday."""
+    h = np.asarray(hour)
+    return (np.asarray(dayofweek) < 5) & (((h >= 6) & (h < 10)) | ((h >= 15) & (h < 19)))
+
+
+def block_bootstrap_ci(err_sum: np.ndarray, cnt: np.ndarray, block: int = 288, n_boot: int = 1000,
+                       seed: int = 0) -> np.ndarray:
+    """95% CI of an overall MAE by resampling whole days (keeps serial dependence).
+
+    ``err_sum`` / ``cnt``: per-window sum of absolute errors and number of
+    observed targets, in time order.
+    """
+    rng = np.random.default_rng(seed)
+    nb = len(err_sum) // block
+    es = err_sum[: nb * block].reshape(nb, block).sum(1)
+    cs = cnt[: nb * block].reshape(nb, block).sum(1)
+    idx = rng.integers(0, nb, (n_boot, nb))
+    return np.percentile(es[idx].sum(1) / cs[idx].sum(1), [2.5, 97.5])

@@ -5,7 +5,7 @@
   "best_epoch": 25,
   "best_val_mae": 2.809,
   "train_sec": 8509.0,
-  "infer_sec": 15.87987494468689,
+  "infer_sec": 62.6533522605896,
   "note": "Run interrupted after epoch 26 of 35; outputs exported from the best-validation checkpoint.",
   "args": {
     "model": "gwnet",

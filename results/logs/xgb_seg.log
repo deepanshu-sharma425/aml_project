@@ -1,0 +1,29 @@
+[Parallel(n_jobs=6)]: Using backend LokyBackend with 6 concurrent workers.
+[Parallel(n_jobs=6)]: Done   6 tasks      | elapsed:  3.3min
+[Parallel(n_jobs=6)]: Done  60 tasks      | elapsed:  8.8min
+[Parallel(n_jobs=6)]: Done 150 tasks      | elapsed: 17.6min
+[Parallel(n_jobs=6)]: Done 207 out of 207 | elapsed: 23.6min finished
+fitted 207 sensors x 6 models in 1415s
+train MAE  out-of-fold 2.987  in-sample 2.694
+{
+  "15 min": {
+    "MAE": 2.8884425163269043,
+    "RMSE": 5.666697025299072,
+    "MAPE": 8.14132022857666
+  },
+  "30 min": {
+    "MAE": 3.257737398147583,
+    "RMSE": 6.624338626861572,
+    "MAPE": 9.714634895324707
+  },
+  "60 min": {
+    "MAE": 3.638192892074585,
+    "RMSE": 7.499227523803711,
+    "MAPE": 11.350116729736328
+  },
+  "avg": {
+    "MAE": 3.201199531555176,
+    "RMSE": 6.506088733673096,
+    "MAPE": 9.492931365966797
+  }
+}

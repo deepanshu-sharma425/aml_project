@@ -7,6 +7,7 @@ validation split; the test split is only touched for the final numbers.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import time
 from pathlib import Path
@@ -65,6 +66,10 @@ def save(name, pred, y, extra=None):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--skip-analysis", action="store_true",
+                    help="only refit the models (skip permutation importance and feature ablation)")
+    args = ap.parse_args()
     for d in ("predictions", "metrics", "tables"):
         (OUT / d).mkdir(parents=True, exist_ok=True)
     data = load_metrla()
@@ -115,6 +120,9 @@ def main():
     save("hgb", pred, y_test, {"params": best_params, "train_sec": train_sec,
                                 "infer_sec": time.time() - t1,
                                 "n_iter": {h: int(m.n_iter_) for h, m in gbm.models.items()}})
+
+    if args.skip_analysis:
+        return
 
     # 4. Permutation importance (validation rows, h = 3 and 12) ------------
     rng = np.random.default_rng(SEED)

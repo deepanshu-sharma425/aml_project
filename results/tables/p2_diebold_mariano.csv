@@ -1,0 +1,22 @@
+model_a,model_b,horizon,mae_a,mae_b,dm_stat,p_value,a,b
+Hybrid XGB→GAT,XGBoost per segment,15 min,2.728974342747626,2.893825061651613,-25.21714670635871,0.0,hybrid_attention_main,xgb_seg
+Hybrid XGB→GAT,XGBoost per segment,30 min,3.1011359130210114,3.2643051190229655,-17.154139839632286,0.0,hybrid_attention_main,xgb_seg
+Hybrid XGB→GAT,XGBoost per segment,60 min,3.5234358662192466,3.646370794791814,-9.810817023151111,0.0,hybrid_attention_main,xgb_seg
+ST-GAT,XGBoost per segment,15 min,2.740479715195116,2.893825061651613,-23.471889705488245,0.0,stgat_attention_main,xgb_seg
+ST-GAT,XGBoost per segment,30 min,3.0850108401376755,3.2643051190229655,-17.62040356615636,0.0,stgat_attention_main,xgb_seg
+ST-GAT,XGBoost per segment,60 min,3.4785054441287344,3.646370794791814,-11.76771726915236,0.0,stgat_attention_main,xgb_seg
+Hybrid XGB→GAT,ST-GAT,15 min,2.728974342747626,2.740479715195116,-3.2373255200204407,0.001206556960472005,hybrid_attention_main,stgat_attention_main
+Hybrid XGB→GAT,ST-GAT,30 min,3.1011359130210114,3.0850108401376755,2.653265497327902,0.007971714073259806,hybrid_attention_main,stgat_attention_main
+Hybrid XGB→GAT,ST-GAT,60 min,3.5234358662192466,3.4785054441287344,4.993903942344617,5.917083596429507e-07,hybrid_attention_main,stgat_attention_main
+Hybrid XGB→GAT,Graph WaveNet,15 min,2.728974342747626,2.7220603974555617,1.4874846102945856,0.13688686487351776,hybrid_attention_main,gwnet_full_main
+Hybrid XGB→GAT,Graph WaveNet,30 min,3.1011359130210114,3.109704325060387,-0.9254623677898641,0.3547254500494219,hybrid_attention_main,gwnet_full_main
+Hybrid XGB→GAT,Graph WaveNet,60 min,3.5234358662192466,3.5942646285945967,-4.268067590800498,1.9717359009518987e-05,hybrid_attention_main,gwnet_full_main
+ST-GAT,Graph WaveNet,15 min,2.740479715195116,2.7220603974555617,3.906164165515422,9.377281673184079e-05,stgat_attention_main,gwnet_full_main
+ST-GAT,Graph WaveNet,30 min,3.0850108401376755,3.109704325060387,-2.825948957290336,0.004714077521341897,stgat_attention_main,gwnet_full_main
+ST-GAT,Graph WaveNet,60 min,3.4785054441287344,3.5942646285945967,-7.167406096975946,7.642775301519578e-13,stgat_attention_main,gwnet_full_main
+Hybrid XGB→GAT,Gradient Boosting (features),15 min,2.728974342747626,2.8984043310896688,-29.2300236354223,0.0,hybrid_attention_main,hgb
+Hybrid XGB→GAT,Gradient Boosting (features),30 min,3.1011359130210114,3.2952902537778987,-20.77534744552736,0.0,hybrid_attention_main,hgb
+Hybrid XGB→GAT,Gradient Boosting (features),60 min,3.5234358662192466,3.6633684118648557,-12.030178562052802,0.0,hybrid_attention_main,hgb
+XGBoost per segment,Gradient Boosting (features),15 min,2.893825061651613,2.8984043310896688,-1.124182134239337,0.26093576703286736,xgb_seg,hgb
+XGBoost per segment,Gradient Boosting (features),30 min,3.2643051190229655,3.2952902537778987,-5.493621835315248,3.937732251380055e-08,xgb_seg,hgb
+XGBoost per segment,Gradient Boosting (features),60 min,3.646370794791814,3.6633684118648557,-2.134847842863674,0.03277344086055689,xgb_seg,hgb

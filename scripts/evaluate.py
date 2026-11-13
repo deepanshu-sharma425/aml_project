@@ -15,7 +15,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 from traffic import plotting as P
 from traffic.data import load_locations, load_metrla
-from traffic.metrics import HORIZONS, diebold_mariano, evaluate, per_step_abs_error
+from traffic.metrics import HORIZONS, block_bootstrap_ci, diebold_mariano, evaluate, per_step_abs_error
 
 RES = ROOT / "results"
 FIG, TAB, TEX = RES / "figures", RES / "tables", ROOT / "report" / "tables"
@@ -87,19 +87,6 @@ def latex_table(df: pd.DataFrame, caption: str, label: str, literature=None) -> 
             lines.append(f"{name} & " + " & ".join(f"{v:.2f}" for v in vals) + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
     return "\n".join(lines)
-
-
-def block_bootstrap_ci(err_sum, cnt, block=288, n_boot=1000, seed=0):
-    """95% CI of overall MAE resampling whole days (keeps serial dependence)."""
-    rng = np.random.default_rng(seed)
-    nb = len(err_sum) // block
-    es = err_sum[: nb * block].reshape(nb, block).sum(1)
-    cs = cnt[: nb * block].reshape(nb, block).sum(1)
-    stats = []
-    for _ in range(n_boot):
-        idx = rng.integers(0, nb, nb)
-        stats.append(es[idx].sum() / cs[idx].sum())
-    return np.percentile(stats, [2.5, 97.5])
 
 
 def main():

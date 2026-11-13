@@ -1,0 +1,35 @@
+stgat_attention_ablation: 163,516 parameters, inputs=masked
+epoch   1  train 4.0024  val 3.3080  (64s)
+epoch   2  train 3.5219  val 3.1059  (64s)
+epoch   3  train 3.3529  val 3.1022  (62s)
+epoch   4  train 3.2358  val 3.0381  (62s)
+epoch   5  train 3.1837  val 2.9634  (65s)
+epoch   6  train 3.1596  val 3.0038  (64s)
+epoch   7  train 3.1224  val 2.9845  (58s)
+epoch   8  train 3.0915  val 2.9165  (59s)
+epoch   9  train 3.0774  val 2.9369  (59s)
+epoch  10  train 3.0602  val 2.9124  (59s)
+epoch  11  train 3.0501  val 2.8740  (59s)
+epoch  12  train 3.0494  val 2.9855  (61s)
+{
+  "15 min": {
+    "MAE": 2.7573375701904297,
+    "RMSE": 5.295469284057617,
+    "MAPE": 7.270404815673828
+  },
+  "30 min": {
+    "MAE": 3.1245484352111816,
+    "RMSE": 6.294899940490723,
+    "MAPE": 8.816934585571289
+  },
+  "60 min": {
+    "MAE": 3.527876615524292,
+    "RMSE": 7.310606956481934,
+    "MAPE": 10.534046173095703
+  },
+  "avg": {
+    "MAE": 3.083132266998291,
+    "RMSE": 6.229375839233398,
+    "MAPE": 8.700252532958984
+  }
+}

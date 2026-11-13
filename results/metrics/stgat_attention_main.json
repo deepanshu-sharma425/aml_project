@@ -1,0 +1,57 @@
+{
+  "model": "stgat_attention_main",
+  "params": 163516,
+  "epochs_run": 40,
+  "best_epoch": 39,
+  "best_val_mae": 2.822052240371704,
+  "train_sec": 45092.25402069092,
+  "infer_sec": 9.598290920257568,
+  "args": {
+    "model": "stgat",
+    "variant": "full",
+    "spatial": "attention",
+    "inputs": "masked",
+    "base": "None",
+    "residual": "True",
+    "epochs": "40",
+    "patience": "8",
+    "lr": "0.001",
+    "weight_decay": "0.0001",
+    "optimizer": "adamw",
+    "lr_patience": "3",
+    "dropout": "0.2",
+    "attn_dropout": "0.1",
+    "heads": "4",
+    "node_emb": "16",
+    "batch_size": "32",
+    "epoch_fraction": "0.5",
+    "hidden": "64",
+    "seed": "0",
+    "tag": "main",
+    "name": "stgat_attention_main",
+    "eval_only": "False",
+    "out": "/Users/deepanshu./Desktop/aml_project/results"
+  },
+  "metrics": {
+    "15 min": {
+      "MAE": 2.7354910373687744,
+      "RMSE": 5.234745502471924,
+      "MAPE": 7.45011043548584
+    },
+    "30 min": {
+      "MAE": 3.0789217948913574,
+      "RMSE": 6.257723331451416,
+      "MAPE": 8.880058288574219
+    },
+    "60 min": {
+      "MAE": 3.471057415008545,
+      "RMSE": 7.300549030303955,
+      "MAPE": 10.577981948852539
+    },
+    "avg": {
+      "MAE": 3.0397908687591553,
+      "RMSE": 6.197661876678467,
+      "MAPE": 8.755959510803223
+    }
+  }
+}
