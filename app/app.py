@@ -1,4 +1,4 @@
-"""Graph WaveNet speed forecasts on the METR-LA test period.
+"""ST-GAT (spatio-temporal graph attention) speed forecasts on the METR-LA test period.
 
 Run from the repository root (so .streamlit/config.toml is picked up):
     streamlit run app/app.py
@@ -24,15 +24,17 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from traffic import cleaning as C
-from traffic.data import DATA_DIR, load_metrla, transition_matrices
+from traffic.data import DATA_DIR, load_metrla
 from traffic.metrics import evaluate
-from traffic.models import GraphWaveNet
+from traffic.models import STGAT
 from traffic.trainer import Trainer, pick_device
 
-CKPT = ROOT / "checkpoints" / "gwnet_full_main.pt"
+CKPT = ROOT / "checkpoints" / "stgat_attention_main.pt"   # best stand-alone model
 # Fixed legend order = fixed categorical slot per model
-MODELS = {"gwnet": "Graph WaveNet", "hgb": "Gradient Boosting", "ridge": "Ridge",
-          "persistence": "Persistence", "ha": "Historical Average"}
+MODELS = {"hybrid_attention_main": "Hybrid XGB→GAT", "stgat_attention_main": "ST-GAT",
+          "gwnet": "Graph WaveNet", "xgb_seg": "XGBoost per segment", "hgb": "Gradient Boosting",
+          "ridge": "Ridge", "persistence": "Persistence", "ha": "Historical Average"}
+RESULTS = ROOT / "results"
 HORIZONS = {"15 min": 3, "30 min": 6, "60 min": 12}
 
 # Congestion bands (mph) use the status palette; each always ships with its label
@@ -42,10 +44,12 @@ BANDS = [("Free-flow", 55, "#0ca30c"), ("Slowing", 40, "#fab219"),
 PALETTE = {
     "light": dict(actual="#52514e", forecast="#2a78d6", muted="#898781", grid="#e1e0d9",
                   surface="#fcfcfb", ring="#0b0b0b",
-                  series=["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"]),
+                  series=["#1baf7a", "#2a78d6", "#6250d6", "#eb6834", "#eda100", "#e87ba4", "#898781",
+                          "#c3c2b7"]),
     "dark": dict(actual="#c3c2b7", forecast="#3987e5", muted="#898781", grid="#2c2c2a",
                  surface="#1a1a19", ring="#f0efec",
-                 series=["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181"]),
+                 series=["#199e70", "#3987e5", "#7a6ae0", "#d95926", "#c98500", "#d55181", "#898781",
+                         "#52514e"]),
 }
 
 st.set_page_config(page_title="LA Traffic Forecast", page_icon="🚦", layout="wide")
@@ -55,10 +59,10 @@ st.set_page_config(page_title="LA Traffic Forecast", page_icon="🚦", layout="w
 @st.cache_resource(show_spinner="Loading data and model…")
 def load():
     data = load_metrla()
-    supports = [torch.tensor(s) for s in transition_matrices(data.adj)]
-    model = GraphWaveNet(data.num_nodes, supports, adaptive=True, use_graph=True)
+    # Same architecture as scripts/train_deep.py --model stgat (default arguments).
+    model = STGAT(data.num_nodes, data.adj, in_dim=6, spatial="attention")
     model.load_state_dict(torch.load(CKPT, map_location="cpu", weights_only=True))
-    trainer = Trainer(model, data, device=pick_device(), batch_size=64)
+    trainer = Trainer(model, data, device=pick_device(), batch_size=64, inputs="masked")
     locs = pd.read_csv(DATA_DIR / "graph_sensor_locations.csv", dtype={"sensor_id": str})
     locs = locs.set_index("sensor_id").loc[data.sensor_ids]
     return data, trainer, locs
@@ -66,17 +70,17 @@ def load():
 
 @st.cache_data(show_spinner="Loading test-set accuracy…")
 def test_set_metrics() -> dict[str, dict]:
-    """Saved test-set metrics per model; Graph WaveNet is re-scored only if its file is missing."""
+    """Saved test-set metrics per model; ST-GAT is re-scored only if its file is missing."""
     out = {}
     for key, name in MODELS.items():
         f = ROOT / "results" / "metrics" / f"{'gwnet_full_main' if key == 'gwnet' else key}.json"
         if f.exists():
             out[name] = json.loads(f.read_text())["metrics"]
-    if "Graph WaveNet" not in out:
+    if "ST-GAT" not in out:
         data, trainer, _ = load()
         test = data.split.test
         y = data.speed[test[:, None] + np.arange(1, data.seq_out + 1)]
-        out = {"Graph WaveNet": evaluate(trainer.predict(test, batch_size=64), y), **out}
+        out = {"ST-GAT": evaluate(trainer.predict(test, batch_size=64), y), **out}
     return out
 
 
@@ -274,11 +278,12 @@ with st.sidebar:
 # ---------------------------------------------------------------- header
 st.markdown("## Los Angeles freeway speed forecast")
 st.markdown(
-    f"<span style='color:{pal['muted']}'>Graph WaveNet forecast made at "
+    f"<span style='color:{pal['muted']}'>ST-GAT forecast made at "
     f"**{t_now:%A %d %B %Y, %H:%M}** · next 60 minutes · {data.num_nodes} sensors</span>",
     unsafe_allow_html=True)
 
-forecast_tab, day_tab, acc_tab = st.tabs(["Live forecast", "Whole day", "Model accuracy"])
+forecast_tab, day_tab, acc_tab, gat_tab = st.tabs(["Live forecast", "Whole day", "Model accuracy",
+                                                   "Graph attention (Phase 2)"])
 
 with forecast_tab:
     k = st.columns(5)
@@ -353,12 +358,14 @@ with day_tab:
 
 with acc_tab:
     metrics = test_set_metrics()
-    best_base = min((v["avg"]["MAE"], k) for k, v in metrics.items() if k != "Graph WaveNet")
-    gain = 100 * (1 - metrics["Graph WaveNet"]["avg"]["MAE"] / best_base[0])
+    best = min(metrics, key=lambda n: metrics[n]["avg"]["MAE"])
+    ref = "XGBoost per segment" if "XGBoost per segment" in metrics and best != "XGBoost per segment" else \
+        min((n for n in metrics if n != best), key=lambda n: metrics[n]["avg"]["MAE"])
+    gain = 100 * (1 - metrics[best]["avg"]["MAE"] / metrics[ref]["avg"]["MAE"])
     a, b = st.columns([1, 2], gap="medium")
     with a:
-        st.metric("Graph WaveNet average error", f"{metrics['Graph WaveNet']['avg']['MAE']:.2f} mph", border=True,
-                  delta=f"{gain:.1f}% lower than {best_base[1]}", delta_color="off", delta_arrow="off")
+        st.metric(f"{best} average error", f"{metrics[best]['avg']['MAE']:.2f} mph", border=True,
+                  delta=f"{gain:.1f}% lower than {ref}", delta_color="off", delta_arrow="off")
         st.caption("Whole test period: 6,850 forecast times × 207 sensors × 12 steps. "
                    "Missing readings are ignored. Lower is better.")
     with b, st.container(border=True):
@@ -392,6 +399,43 @@ with acc_tab:
     st.markdown(f"**{metric} ({unit[metric]})** · best per column in bold")
     st.dataframe(table.style.format("{:.3f}").highlight_min(axis=0, props="font-weight:700"),
                  width="stretch")
+
+with gat_tab:
+    st.markdown("Phase 2 asks whether learning over the road graph improves on **independent per-segment "
+                "models**. ST-GAT attends over each sensor's upstream and downstream neighbours on the fixed road "
+                "graph; the hybrid lets ST-GAT correct the per-segment XGBoost forecasts. All results below are "
+                "on the test period (4–27 June 2012).")
+
+    def table(name):
+        f = RESULTS / "tables" / name
+        return pd.read_csv(f) if f.exists() else None
+
+    def figure(name, caption):
+        f = RESULTS / "figures" / name
+        if f.exists():
+            st.image(str(f), caption=caption, width="stretch")
+
+    reg = table("p2_regimes.csv")
+    if reg is not None:
+        with st.container(border=True):
+            st.markdown("**Peak vs off-peak** · MAE (mph); peak = weekdays 06–10 and 15–19")
+            piv = (reg[reg.regime.isin(["peak", "off-peak", "congested (<40 mph)"])]
+                   .pivot_table(index="model", columns=["regime", "horizon"], values="MAE"))
+            order = [n for n in ["Hybrid XGB→GAT", "ST-GAT", "Graph WaveNet", "XGBoost per segment",
+                                 "Gradient Boosting (features)", "Historical Average"] if n in piv.index]
+            st.dataframe(piv.loc[order].style.format("{:.2f}").highlight_min(axis=0, props="font-weight:700"),
+                         width="stretch")
+    figure("p2_gap_analysis.png", "Why a graph? The per-segment models' errors are correlated across nearby "
+                                  "sensors and predictable from neighbours' state at forecast time.")
+    figure("p2_congestion_map.png", "Evening-peak congestion: observed vs. forecasts made 60 minutes earlier.")
+    figure("p2_attention.png", "Where ST-GAT looks: attention weights of one congested sensor.")
+    sig = table("p2_signal_policy.csv")
+    if sig is not None:
+        with st.container(border=True):
+            st.markdown("**Simulated signal-plan switching** · offline replay of the test period, not live control")
+            st.dataframe(sig.drop(columns=["onsets"]).set_index("policy").style.format("{:.1f}"), width="stretch")
+            st.caption("A controller switches to a congestion plan when it expects < 40 mph in 15 minutes. "
+                       "Anticipated = plan already on 5–30 minutes before a congestion onset.")
 
 if st.session_state.playing and pos + 1 < len(test_times):
     time.sleep(1.0)
