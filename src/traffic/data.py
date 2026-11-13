@@ -131,7 +131,7 @@ def time_of_day(index: pd.DatetimeIndex) -> np.ndarray:
 
 
 def day_of_week(index: pd.DatetimeIndex) -> np.ndarray:
-    return index.dayofweek.to_numpy(dtype=np.int64)
+    return index.day_of_week.to_numpy(dtype=np.int64)
 
 
 def windows(values: np.ndarray, anchors: np.ndarray, seq_in: int = 12,

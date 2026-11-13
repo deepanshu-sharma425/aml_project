@@ -4,18 +4,20 @@ Our Applied ML project. We predict freeway speeds in Los Angeles 5 to 60 minutes
 ahead, at 207 road sensors at once, using the METR-LA dataset (March to June 2012,
 one reading every 5 minutes).
 
-We started with simple baselines and worked up to Graph WaveNet, a graph neural
-network that uses the road network between sensors. Along the way we cleaned the
-data, built a set of hand-made features for the classical models, and checked
-whether the differences between models are actually significant. There's also a
-small Streamlit app where you can replay the forecasts on the test period.
+**Phase 1** built the data pipeline, hand-made features, classical models and Graph
+WaveNet. **Phase 2** asks the project's main question: *does learning over the road
+network beat forecasting each road segment on its own?* We fit one XGBoost model per
+segment, show what it is missing, and then build a graph attention network (ST-GAT)
+and a hybrid where graph attention corrects the XGBoost forecasts. There's also a
+Streamlit app where you can replay the forecasts on the test period.
 
 ![Live forecast tab of the app](app/screenshots/live.jpg)
 
 ## Results
 
 Mean absolute error in mph on the test set (4–27 June 2012). Lower is better.
-Missing readings are left out of the score.
+Missing readings are left out of the score. Every model sees the same one hour of
+history.
 
 | Model | 15 min | 30 min | 60 min | Average |
 |---|---|---|---|---|
@@ -23,15 +25,32 @@ Missing readings are left out of the score.
 | Persistence | 3.50 | 4.21 | 5.38 | 4.24 |
 | Ridge (our features) | 3.37 | 3.78 | 4.09 | 3.69 |
 | Gradient boosting (our features) | 2.89 | 3.29 | 3.66 | 3.22 |
-| Graph WaveNet | **2.72** | **3.10** | **3.59** | **3.07** |
+| **XGBoost per segment** (207 independent models) | 2.89 | 3.26 | 3.64 | 3.20 |
+| Graph WaveNet | **2.72** | 3.10 | 3.59 | 3.07 |
+| **ST-GAT** (graph attention, ours) | 2.74 | **3.08** | **3.47** | **3.04** |
+| **Hybrid XGBoost → GAT** (ours) | 2.72 | 3.09 | 3.52 | 3.06 |
 
-Graph WaveNet came out best at every horizon, and the Diebold-Mariano tests say the
-gap is significant (p < 0.001 against every other model). The original paper reports
-3.53 at 60 minutes, so our version is close. What surprised us was gradient
-boosting: with decent features it ends up only 0.07 mph behind at 60 minutes and
-trains in about 10 minutes on a CPU.
+What we found:
 
-The full numbers (RMSE, MAPE, confidence intervals) are in `results/tables/`.
+- **The road network matters.** The per-segment XGBoost models' errors are correlated
+  between neighbouring sensors (0.21 at 60 min, against 0.04 for unrelated sensors),
+  and the state of the sensor just *downstream* predicts a model's error better than
+  the sensor's own state does. That is information an independent model can't use.
+- **Graph attention uses it.** ST-GAT cuts the per-segment error by 5% overall and by
+  6% at rush hour (60 min ahead). Both ST-GAT and the hybrid beat the independent
+  models at every horizon, with Diebold-Mariano p < 0.001.
+- **The hybrid is best at 15 minutes** among our graph-attention models, but ST-GAT on
+  its own is better at 30 and 60 minutes. ST-GAT is also the best model at 60 minutes
+  overall (3.47 vs 3.59 for Graph WaveNet) with about half the parameters.
+- **Masking outages helps.** When a sensor's latest reading is missing, Graph WaveNet
+  (which sees an outage as 0 mph) gets 52% worse at 60 minutes, ST-GAT only 28%.
+- **Simulated signal control.** In an offline replay of the test period, a controller
+  that switches to a congestion plan based on graph-model forecasts is already switched
+  on before 30–39% of congestion onsets, against 20% with the per-segment model and 0%
+  for a purely reactive one. This is a simulation only; we don't claim live control.
+
+The full numbers (RMSE, MAPE, peak vs off-peak, significance tests, confidence
+intervals, ablations) are in `results/tables/p2_*` and in the report.
 
 ## Running it
 
@@ -41,12 +60,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 
-pytest                       # 32 tests, takes a few seconds
-streamlit run app/app.py     # the web app
+pytest                       # 52 tests, about 10 seconds
+streamlit run app/app.py     # the web app (uses the trained ST-GAT in checkpoints/)
 ```
-
-The app uses the trained checkpoint in `checkpoints/`, so you don't need to train
-anything to try it.
 
 To reproduce everything from scratch, run the scripts in this order:
 
@@ -54,47 +70,59 @@ To reproduce everything from scratch, run the scripts in this order:
 python scripts/run_eda.py              # EDA figures and stats, ~1 min
 python scripts/clean_data.py           # data checks and cleaning, ~15 s
 python scripts/run_classical.py        # baselines, ridge, gradient boosting, ~40 min on CPU
-bash scripts/run_deep_experiments.sh   # deep models, a few hours
-python scripts/evaluate.py             # tables, significance tests, result figures
+bash scripts/run_deep_experiments.sh   # Phase 1 Graph WaveNet, a few hours
+python scripts/evaluate.py             # Phase 1 tables and figures
+bash scripts/run_phase2.sh             # Phase 2: XGBoost per segment, ST-GAT, hybrid,
+                                       # ablations, LSTM and evaluation (~6 h on an M3)
 ```
 
-Training uses CUDA if there is a GPU, otherwise Apple MPS, otherwise CPU. We trained
-Graph WaveNet on an M3 MacBook and it took about 2.4 hours. The run stopped at epoch 26
-of 35, so the saved model is the best checkpoint up to that point (epoch 25).
+`run_phase2.sh` is resumable: it skips any run whose results already exist, so after
+an interruption just start it again. Keep the laptop awake while it runs (on a Mac,
+`caffeinate -i bash scripts/run_phase2.sh`); a sleeping machine pauses training.
+
+Training uses CUDA if there is a GPU, otherwise Apple MPS, otherwise CPU. One ST-GAT
+epoch takes about a minute on an M3 MacBook (8 GB).
 
 Predictions get written to `results/predictions/`. That folder is git-ignored because
-it's around 300 MB, but the scripts recreate it.
+it's over 1 GB, but the scripts recreate it.
 
 ## How it works
 
 **Setup.** Each model gets the last hour (12 readings) for every sensor and has to
 predict the next hour (12 readings). We split the data by time: the first 70% for
-training, the next 10% for tuning, and the last 20% for testing. This is the same
-setup the DCRNN and Graph WaveNet papers use, so our numbers can be compared with theirs.
+training, the next 10% for tuning, and the last 20% for testing, never shuffling
+across those boundaries. This is the same setup the DCRNN and Graph WaveNet papers
+use, so our numbers can be compared with theirs.
 
 **Missing data.** About 8% of readings are missing, and the dataset stores them as 0
-mph. We never score a model on those. For the input features we only fill gaps with
-past values, so nothing from the future leaks in.
+mph. We never score a model on those. For inputs we only fill gaps with past values,
+and the Phase 2 networks also get a 0/1 channel saying whether each reading was real.
 
-**Features.** The classical models get 34 features in six groups: recent speeds,
-rolling stats over the last hour, time of day and day of week, the sensor's usual
-speed for that time of week, the speeds just upstream and downstream, and a few fixed
-facts about each sensor. The "usual speed for this time of week" group helped the
-most. There are tests in `tests/test_features.py` that check no feature looks into the future.
+**Phase 1 models.** Historical average, persistence, ridge regression and gradient
+boosting on 34 hand-made features, and Graph WaveNet (road graph plus a learned
+adjacency, dilated convolutions over time).
 
-**Models.** Historical average, persistence (speed stays the same), ridge regression,
-histogram gradient boosting with one model per horizon, and Graph WaveNet. Graph
-WaveNet combines the road graph with an adjacency matrix it learns itself, and uses
-dilated convolutions over time.
+**XGBoost per segment (Phase 2 baseline).** One model per sensor, using only that
+sensor's own history: 12 recent speeds, short-term changes, rolling stats, time of
+day and week as sin/cos, and the sensor's usual speed at each target time. One model
+predicts all 12 horizons. METR-LA only has speed, so flow and occupancy features
+aren't possible here.
+
+**ST-GAT.** Gated convolutions over time, alternating with graph attention over the
+fixed road graph. Each sensor attends separately to the sensors downstream and
+upstream of it, because traffic jams travel backwards along a road. 164k parameters.
+
+**Hybrid.** The XGBoost forecasts go into ST-GAT, which outputs a *correction* that is
+added to them. The last layer starts at zero, so training starts exactly at the
+XGBoost forecast. The XGBoost forecasts used for training are out-of-fold (5 time
+blocks with a gap around each), so the network learns from errors as large as the
+ones it will see at test time.
 
 **Checking the results.** Diebold-Mariano tests with Newey-West variance, bootstrap
-confidence intervals that resample whole days, and error broken down by horizon,
-hour of day, sensor and missing inputs. The evening rush around 18:00 is by far the
-hardest time to predict.
-
-The code also has an LSTM and a Graph WaveNet ablation (no graph, road graph only,
-learned graph only) in `scripts/run_deep_experiments.sh`. We didn't finish those runs,
-so they aren't in the results above.
+confidence intervals that resample whole days, errors by horizon, peak vs off-peak,
+congestion and missing inputs, ablations that switch off one design choice at a
+time, and 52 unit tests (including a check that our attention layer matches PyTorch
+Geometric's `GATConv`, and that no feature looks into the future).
 
 ## Data cleaning
 
@@ -124,19 +152,40 @@ can't read it, so `src/traffic/data.py` reads it directly with h5py.
 
 ```
 Dataset/           raw METR-LA files (speeds, sensor ids, locations, road distances)
-src/traffic/       the Python package: data loading, cleaning, features, metrics, models, training
-scripts/           one script per step (EDA, cleaning, classical models, deep models, evaluation)
-tests/             pytest tests (leakage, alignment, masking, graph, model shapes, cleaning)
+src/traffic/       the Python package: data loading, cleaning, features, metrics, training
+  models/          baselines, classical, LSTM, Graph WaveNet, segment.py (XGBoost per
+                   segment), stgat.py (ST-GAT and the hybrid)
+  graph.py         road-graph statistics (NetworkX)
+scripts/           one script per step; Phase 2: run_segment_xgb.py, train_deep.py,
+                   run_phase2.sh, evaluate_phase2.py, compare_xgb_strategy.py
+tests/             pytest tests (leakage, alignment, masking, graph, attention, hybrid)
 notebooks/         01_eda.ipynb, the exploratory analysis with notes
-results/           metrics, tables, figures, training history and logs
-checkpoints/       trained Graph WaveNet weights
+results/           metrics, tables, figures, training history and logs (p2_* = Phase 2)
+checkpoints/       trained Graph WaveNet, ST-GAT and hybrid weights
 app/               the Streamlit app, plus screenshots
 report/            IEEE-format LaTeX paper (main.tex, compiled to main.pdf)
-project_report/    shorter plain-language report (project_report.tex / .pdf)
+presentation/      Phase 2 slides (slides.tex, compiled to slides.pdf)
+docs/              viva_notes.md: likely viva questions with short answers
+project_report/    shorter plain-language Phase 1 report (project_report.tex / .pdf)
 ```
 
-To rebuild the PDFs: `cd report && tectonic main.tex` and
+To rebuild the PDFs: `cd report && tectonic main.tex`,
+`cd presentation && tectonic slides.tex` and
 `cd project_report && tectonic project_report.tex`.
+
+## For the Phase 2 evaluation
+
+- Architecture logic: section VI of the paper (`report/sections/deep.tex`), `src/traffic/models/stgat.py`
+- Hybrid innovation: section VI-C, `STGAT(base_dim=12, residual=True)`, `scripts/run_segment_xgb.py` (cross-fitted base forecasts)
+- Ablation studies: section IX-E, `results/tables/p2_ablation_*.csv`
+- Deep learning literature review: section II (`report/sections/related.tex`)
+- DL dataset and regularisation: section VI-D, `input_features()` in `src/traffic/trainer.py`
+- Technical validation: `results/tables/p2_diebold_mariano.csv`, `p2_bootstrap_ci.csv`, `tests/test_phase2.py`
+- Theoretical rigour: Eq. (8) (the gap of independent models) and the attention analysis in section VI-B
+- Code quality: package layout, 52 tests, resumable `scripts/run_phase2.sh`
+- Presentation: `presentation/slides.pdf` and the app's "Graph attention (Phase 2)" tab
+- Viva: `docs/viva_notes.md`
+- Report: `report/main.pdf`
 
 ## For the Phase 1 evaluation
 
@@ -145,8 +194,7 @@ To rebuild the PDFs: `cd report && tectonic main.tex` and
 - Feature engineering: `src/traffic/features.py`, plus the ablation and permutation importance results in `results/tables/`
 - Theoretical rigour: section V of the paper, and `src/traffic/metrics.py` for the masked metrics and the DM test
 - Model application: `src/traffic/models/`, `scripts/run_classical.py`, `scripts/train_deep.py`, `results/metrics/`
-- Code quality: the package layout, the tests, and one reproducible script per step
-- Presentation: `project_report/project_report.pdf` and the app (`streamlit run app/app.py`)
+- Presentation: `project_report/project_report.pdf` and the app
 - Report: `report/main.pdf`
 
 ## References
@@ -156,5 +204,7 @@ The main papers we built on:
 - Li et al., *Diffusion Convolutional Recurrent Neural Network* (DCRNN), ICLR 2018. This is where METR-LA comes from.
 - Wu et al., *Graph WaveNet for Deep Spatial-Temporal Graph Modeling*, IJCAI 2019.
 - Yu et al., *Spatio-Temporal Graph Convolutional Networks* (STGCN), IJCAI 2018.
+- Veličković et al., *Graph Attention Networks*, ICLR 2018. The attention layer of ST-GAT.
+- Zhang et al., *CityFlow: A Multi-Agent Reinforcement Learning Environment for Large Scale City Traffic Scenario*, WWW 2019.
 
 The full list is in `report/refs.bib`.

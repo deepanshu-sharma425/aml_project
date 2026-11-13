@@ -6,6 +6,8 @@ __pycache__/
 .DS_Store
 checkpoints/*
 !checkpoints/gwnet_full_main.pt
+!checkpoints/stgat_attention_main.pt
+!checkpoints/hybrid_attention_main.pt
 report/*.aux
 report/*.log
 report/*.out
@@ -14,3 +16,10 @@ report/*.blg
 results/predictions/
 *.egg-info/
 Dataset/cleaned/
+report/*.toc
+presentation/*.aux
+presentation/*.log
+presentation/*.nav
+presentation/*.out
+presentation/*.snm
+presentation/*.toc

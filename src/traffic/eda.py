@@ -90,7 +90,7 @@ def daily_profile(d: METRLA):
     s = pd.DataFrame(np.where(d.speed > 0, d.speed, np.nan), index=d.index)
     city = s.mean(1)
     tod = (d.index.hour * 60 + d.index.minute) / 60
-    weekend = d.index.dayofweek >= 5
+    weekend = d.index.day_of_week >= 5
     fig, ax = plt.subplots(1, 2, figsize=(10, 3.2))
     out = {}
     for i, (lab, m) in enumerate((("weekday", ~weekend), ("weekend", weekend))):
@@ -103,7 +103,7 @@ def daily_profile(d: METRLA):
     ax[0].set(xlabel="hour of day", ylabel="network mean speed (mph)", title="Daily profile (mean, IQR band)",
               xticks=range(0, 25, 3))
     ax[0].legend()
-    hw = city.groupby([d.index.dayofweek, d.index.hour]).mean().unstack()
+    hw = city.groupby([d.index.day_of_week, d.index.hour]).mean().unstack()
     im = ax[1].imshow(hw.to_numpy(), aspect="auto", cmap=P.BLUES.reversed(), interpolation="nearest")
     ax[1].set_yticks(range(7), ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
     ax[1].set_xticks(range(0, 24, 3))

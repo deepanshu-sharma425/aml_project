@@ -30,3 +30,18 @@ def test_diebold_mariano_direction():
     assert stat < 0 and p < 1e-6
     stat, p = diebold_mariano(base, base + rng.normal(0, 1e-3, 2000))
     assert p > 0.01
+
+
+def test_peak_definition():
+    from traffic.metrics import is_peak
+    hour = np.array([5, 6, 9, 10, 15, 18, 19, 17])
+    dow = np.array([0, 0, 0, 0, 0, 0, 0, 6])          # last one is a Sunday
+    assert is_peak(hour, dow).tolist() == [False, True, True, False, True, True, False, False]
+
+
+def test_subset_metrics_masks_missing():
+    from traffic.metrics import subset_metrics
+    y = np.array([[0.0, 50.0, 40.0]])
+    p = np.array([[9.0, 52.0, 30.0]])
+    s = subset_metrics(p, y, np.array([[True, True, False]]))
+    assert s["n"] == 1 and np.isclose(s["MAE"], 2.0)

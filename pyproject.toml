@@ -4,16 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "traffic"
-version = "1.0.0"
-description = "Spatio-temporal traffic speed forecasting on METR-LA"
+version = "2.0.0"
+description = "Traffic forecasting on METR-LA: per-segment XGBoost, graph attention and a hybrid"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.26", "pandas>=2.1", "scipy>=1.11", "scikit-learn>=1.6", "statsmodels>=0.14",
-    "h5py>=3.10", "torch>=2.2", "matplotlib>=3.8",
+    "h5py>=3.10", "torch>=2.2", "matplotlib>=3.8", "xgboost>=2.0", "joblib>=1.3",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "jupyter", "nbformat", "nbconvert"]
+dev = ["pytest>=8", "jupyter", "nbformat", "nbconvert", "torch_geometric>=2.5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

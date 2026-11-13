@@ -29,7 +29,7 @@ def forward_fill(speed: np.ndarray) -> np.ndarray:
 
 def time_of_week(index: pd.DatetimeIndex) -> np.ndarray:
     """Slot 0..2015 within the week (5-minute resolution)."""
-    return (index.dayofweek * STEPS_PER_DAY + index.hour * 12 + index.minute // 5).to_numpy()
+    return (index.day_of_week * STEPS_PER_DAY + index.hour * 12 + index.minute // 5).to_numpy()
 
 
 def historical_profile(speed: np.ndarray, tow: np.ndarray, end: int) -> np.ndarray:
@@ -99,7 +99,7 @@ class FeatureBuilder:
             add("missing_now", raw_win[..., 0] == 0)
         if "calendar" in groups:
             ang = 2 * np.pi * (self.tow[a + h] % STEPS_PER_DAY) / STEPS_PER_DAY
-            dow = self.data.index.dayofweek.to_numpy()[a + h]
+            dow = self.data.index.day_of_week.to_numpy()[a + h]
             add("tod_sin", np.sin(ang)[:, None])
             add("tod_cos", np.cos(ang)[:, None])
             add("dow", dow[:, None])
