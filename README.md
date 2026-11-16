@@ -12,7 +12,7 @@ segment on its own?* We train three models:
 
 Signal control is studied by **offline simulation only**; we make no claim of live traffic control.
 
-**Reports:** [project report (PDF, 14 pages)](project_report_phase2/project_report.pdf) ·
+**Reports:** [project report (PDF, IEEE format, 7 pages)](project_report_phase2/project_report.pdf) ·
 [IEEE paper (PDF)](report/main.pdf) · [slides (PDF)](presentation/slides.pdf) ·
 [viva notes](docs/viva_notes.md)
 
@@ -187,13 +187,13 @@ docs/                   viva notes and team roles
 
 | Item | Where |
 |---|---|
-| Architecture logic | Project report section 5; `src/traffic/models/stgat.py` |
-| Hybrid innovation | Project report section 6; `scripts/run_segment_xgb.py` (cross-fitting) |
-| Ablation studies | Project report section 7.3; `results/tables/p2_ablation_*.csv` |
-| DL literature review | Project report section 2; IEEE paper section II |
-| DL dataset and regularisation | Project report sections 3 and 5.4 |
+| Architecture logic | Project report Section V; `src/traffic/models/stgat.py` |
+| Hybrid innovation | Project report Section VI; `scripts/run_segment_xgb.py` (cross-fitting) |
+| Ablation studies | Project report Section VII-C; `results/tables/p2_ablation_*.csv` |
+| DL literature review | Project report Section II; IEEE paper Section II |
+| DL dataset and regularisation | Project report Sections III and V-D |
 | Technical validation | `results/tables/p2_diebold_mariano.csv`, `p2_bootstrap_ci.csv`, `tests/` |
-| Theoretical rigour | The gap equation (report section 4.3), graph attention (section 5.3) |
+| Theoretical rigour | The gap equation (report Section IV-C), graph attention (Section V-C) |
 | GitHub repository and code quality | Package layout, 52 tests, resumable pipeline |
 | Presentation | `presentation/slides.pdf`, the app |
 | Viva | `docs/viva_notes.md` |

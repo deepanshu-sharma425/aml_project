@@ -1,11 +1,9 @@
-% Phase 2 project report.  Build:  cd project_report_phase2 && tectonic project_report.tex
-\documentclass[11pt,a4paper]{article}
-\usepackage[a4paper,margin=2.5cm]{geometry}
+% Phase 2 project report, IEEE conference format.  Build:  cd project_report_phase2 && tectonic project_report.tex
+\documentclass[conference]{IEEEtran}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
-  \usepackage{mathptmx}
-\else
+\else  % XeLaTeX / Tectonic: Times-compatible OpenType font
   \usepackage{fontspec}
   \setmainfont{texgyretermes}[Extension=.otf, UprightFont=*-regular, BoldFont=*-bold,
     ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
@@ -13,53 +11,40 @@
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{float}
-\usepackage{caption}
-\usepackage{setspace}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,fit}
 \usepackage[hidelinks]{hyperref}
 \usepackage{cite}
 \graphicspath{{../results/figures/}}
-\setstretch{1.15}
-\setlength{\parskip}{0.35em}
-\captionsetup{font=small}
-\renewcommand{\refname}{References}
 \tikzset{
   box/.style={draw=black!70, rounded corners=2pt, fill=white, minimum height=2.2em, align=center, font=\small, inner sep=4pt},
   dl/.style={box, draw=blue!60!black, fill=blue!6},
   ml/.style={box, draw=orange!80!black, fill=orange!8},
   arr/.style={-{Stealth[length=2mm]}, thick, black!70},
 }
+% start a second row of author blocks
+\makeatletter
+\newcommand{\linebreakand}{\end{@IEEEauthorhalign}\hfill\mbox{}\par\mbox{}\hfill\begin{@IEEEauthorhalign}}
+\makeatother
 
 \begin{document}
 
-% ---------------------------------------------------------------- title page
-\begin{titlepage}
-\centering
-\vspace*{3cm}
-{\LARGE\bfseries Traffic Flow Prediction on METR-LA\\[0.3em] with Graph Attention Networks and a Hybrid Model\par}
-\vspace{1.2cm}
-{\large Deep Learning \textperiodcentered{}  Project Report\par}
-\vspace{2.5cm}
-{\large Submitted by\par}
-\vspace{0.5cm}
-\begin{tabular}{ll}
-\toprule
-Name & Enrollment No. \\
-\midrule
-Deepanshu & 2401010144 \\
-Kanishk Sharma & 2401010207 \\
-Adarsh & 2401010026 \\
-Daksh Yadav & 2401010139 \\
-Hrishabh Prajapati & 2401020027 \\
-\bottomrule
-\end{tabular}
-\vfill
-{\large November 2026\par}
-\end{titlepage}
+\title{Traffic Flow Prediction on METR-LA with Graph Attention Networks and a Hybrid Model}
 
-% ---------------------------------------------------------------- abstract + contents
+\author{
+\IEEEauthorblockN{Deepanshu}\IEEEauthorblockA{Enrollment No. 2401010144}
+\and
+\IEEEauthorblockN{Kanishk Sharma}\IEEEauthorblockA{Enrollment No. 2401010207}
+\and
+\IEEEauthorblockN{Adarsh}\IEEEauthorblockA{Enrollment No. 2401010026}
+\linebreakand
+\IEEEauthorblockN{Daksh Yadav}\IEEEauthorblockA{Enrollment No. 2401010139}
+\and
+\IEEEauthorblockN{Hrishabh Prajapati}\IEEEauthorblockA{Enrollment No. 2401020027}
+}
+
+\maketitle
+
 \begin{abstract}
 We forecast traffic speed 5 to 60 minutes ahead at the 207 sensors of the METR-LA dataset
 and ask whether a model that uses the road network does better than separate models for
@@ -74,9 +59,11 @@ the road graph and from handling missing sensor readings properly. A simple offl
 experiment also shows that the better forecasts would let a traffic signal switch to a
 congestion plan earlier. This is a simulation only; we did not control real signals.
 \end{abstract}
-\newpage
-\tableofcontents
-\newpage
+
+\begin{IEEEkeywords}
+traffic forecasting, graph attention networks, spatio-temporal deep learning, hybrid models,
+XGBoost, METR-LA
+\end{IEEEkeywords}
 
 % ---------------------------------------------------------------- 1
 \section{Introduction}
@@ -139,7 +126,7 @@ time steps where the whole network was down.
 We build the adjacency matrix from the road distances with the Gaussian kernel used by
 DCRNN~\cite{li2018dcrnn}:
 \begin{equation}
-W_{ij}=\exp\!\left(-d_{ij}^2/\sigma^2\right)\ \text{if this value is at least } 0.1,\qquad W_{ij}=0\ \text{otherwise},
+W_{ij}=\begin{cases}\exp\!\left(-d_{ij}^2/\sigma^2\right) & \text{if this is at least } 0.1,\\ 0 & \text{otherwise,}\end{cases}
 \end{equation}
 where $d_{ij}$ is the road distance from sensor $i$ to sensor $j$ and $\sigma$ is the standard
 deviation of all distances. The resulting graph has 1,515 directed edges, 73\,\% of them
@@ -190,13 +177,13 @@ single feature. In other words, the model predicts the usual pattern for that ti
 and adjusts it with the current reading. Early stopping keeps a median of 113 trees per
 sensor.
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{p2_xgb_importance.png}
 \caption{XGBoost per segment. Left: the most important features (share of total gain, 30
 sensors). Right: number of trees kept for each of the 207 sensors.}
 \label{fig:xgb}
-\end{figure}
+\end{figure*}
 
 \subsection{What the model misses}
 To see what an independent model cannot capture, we looked at its errors on the training
@@ -209,19 +196,22 @@ This is information from other sensors that an independent model never sees. If 
 forecast that uses only sensor $i$ is $m_i$ and the best forecast using the whole network is
 $m_{\mathcal{G}}$, then
 \begin{equation}
-\mathbb{E}\big[(y-m_i)^2\big]-\mathbb{E}\big[(y-m_{\mathcal{G}})^2\big]=\mathbb{E}\big[(m_{\mathcal{G}}-m_i)^2\big]\ \ge 0,
+\begin{split}
+&\mathbb{E}\big[(y-m_i)^2\big]-\mathbb{E}\big[(y-m_{\mathcal{G}})^2\big]\\
+&\qquad=\mathbb{E}\big[(m_{\mathcal{G}}-m_i)^2\big]\ \ge 0,
+\end{split}
 \end{equation}
 so the network can only help, and it helps exactly when the per-segment errors depend on
 other sensors, which is what we observe.
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{p2_gap_analysis.png}
 \caption{Errors of the per-segment XGBoost models on out-of-fold training data. Left:
 correlation of errors between sensor pairs by road distance. Right: correlation of the error
 with information available at forecast time.}
 \label{fig:gap}
-\end{figure}
+\end{figure*}
 
 % ---------------------------------------------------------------- 4
 \section{Model 2: ST-GAT}
@@ -237,7 +227,7 @@ temporal convolutions have no padding, so the 12 time steps shrink to 10, 8, 6 a
 convolution reduces them to one vector per sensor, and a small fully connected network
 outputs all 12 forecasts at once. The model has 163,516 parameters.
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
 \begin{tikzpicture}[node distance=4mm and 3.5mm, scale=0.86, transform shape]
 \node[box] (in) {Input\\$12{\times}207{\times}6$\\+ embedding};
@@ -254,7 +244,7 @@ outputs all 12 forecasts at once. The model has 163,516 parameters.
 \end{tikzpicture}
 \caption{ST-GAT architecture.}
 \label{fig:stgat}
-\end{figure}
+\end{figure*}
 
 \subsection{Gated temporal convolution}
 The temporal convolution looks at 3 consecutive time steps and produces two sets of
@@ -269,11 +259,11 @@ that decides how much of each channel is passed on~\cite{dauphin2017glu}.
 The graph attention layer follows Veli\v{c}kovi\'c et al.~\cite{velickovic2018gat}. For a sensor
 $i$ and each neighbour $j$ on the road graph (including $i$ itself) it computes a score and
 turns the scores into weights with a softmax:
-\begin{equation}
-s_{ij}=\mathrm{LeakyReLU}\big(\mathbf{a}_1^\top W h_i+\mathbf{a}_2^\top W h_j\big),\qquad
+\begin{gather}
+s_{ij}=\mathrm{LeakyReLU}\big(\mathbf{a}_1^\top W h_i+\mathbf{a}_2^\top W h_j\big),\\
 \alpha_{ij}=\frac{\exp(s_{ij})}{\sum_{k}\exp(s_{ik})},\qquad
 h'_i=\sum_j \alpha_{ij}\,W h_j .
-\end{equation}
+\end{gather}
 Sensors that are not connected on the road graph get a weight of zero. Because the weights
 depend on the current traffic state, a congested neighbour can get more weight than a free
 flowing one. We checked our layer against the \texttt{GATConv} layer of PyTorch
@@ -302,13 +292,13 @@ share goes up slightly when the sensor is congested (from 0.84 to 0.87). The cha
 direction we expected but small, which matches the ablation result below that attention is
 only a little better than simply averaging the neighbours.
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{p2_attention.png}
 \caption{Attention weights of one congested sensor (downstream and upstream heads) and the
 average attention on neighbours for free-flowing and congested sensors.}
 \label{fig:attn}
-\end{figure}
+\end{figure*}
 
 % ---------------------------------------------------------------- 5
 \section{Model 3: Hybrid XGBoost and Graph Attention}
@@ -323,9 +313,9 @@ where $g_\theta$ receives the same input window as ST-GAT together with the XGBo
 of all sensors. This is similar to the classical approach of fitting a neural network to the
 errors of another model~\cite{zhang2003hybrid}.
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
-\begin{tikzpicture}[node distance=5mm and 6mm, scale=0.9, transform shape]
+\resizebox{\columnwidth}{!}{\begin{tikzpicture}[node distance=5mm and 6mm, scale=0.9, transform shape]
 \node[box] (x) {Sensor history};
 \node[ml, right=of x] (xgb) {XGBoost\\per segment};
 \node[box, below=of x] (g) {All sensors\\+ road graph};
@@ -337,7 +327,7 @@ errors of another model~\cite{zhang2003hybrid}.
 \draw[arr] (xgb) -- (sum);
 \draw[arr] (xgb.south) |- ([yshift=2mm]fuse.north) -- (fuse.north);
 \draw[arr] (head) -- (sum);
-\end{tikzpicture}
+\end{tikzpicture}}
 \caption{The hybrid model.}
 \label{fig:hybrid}
 \end{figure}
@@ -366,7 +356,6 @@ set the average correction is 0.95\,mph. It is larger in peak hours (1.71\,mph) 
 network mostly changes the forecast where congestion spreads between segments.
 
 % ---------------------------------------------------------------- 6
-\newpage
 \section{Results}
 \subsection{Accuracy}
 Table~\ref{tab:main} and Fig.~\ref{fig:horizon} compare the three models on the test set.
@@ -377,7 +366,7 @@ per segment at 15, 30 and 60 minutes ($p<0.001$). At 60 minutes ST-GAT (3.47\,mp
 below the results published for DCRNN (3.60)~\cite{li2018dcrnn} and Graph WaveNet
 (3.53)~\cite{wu2019gwnet} on the same data.
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering
 \caption{Test results (lower is better). MAE and RMSE in mph, MAPE in \%.}
 \label{tab:main}
@@ -393,14 +382,14 @@ ST-GAT & 2.74 & \textbf{5.23} & 7.45 & \textbf{3.08} & \textbf{6.26} & 8.88 & \t
 Hybrid & \textbf{2.72} & \textbf{5.23} & \textbf{7.22} & 3.09 & 6.29 & \textbf{8.77} & 3.52 & 7.35 & \textbf{10.57} \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=0.95\textwidth]{p2_horizon_three.png}
+\includegraphics[width=0.9\textwidth]{p2_horizon_three.png}
 \caption{Test MAE and RMSE at all 12 horizons.}
 \label{fig:horizon}
-\end{figure}
+\end{figure*}
 
 \subsection{Peak hours, congestion and missing readings}
 The network models help most when traffic is hard to predict (Table~\ref{tab:peak}). At 60
@@ -409,18 +398,19 @@ from 3.07 to 2.96\,mph. On congested readings the error drops by more than 1\,mp
 sensor's latest reading is missing, the 60-minute error of ST-GAT rises by 28\,\%, compared
 with 32\,\% for XGBoost per segment and 34\,\% for the hybrid.
 
-\begin{table}[H]
+\begin{table}[t]
 \centering
 \caption{Test MAE (mph) in peak hours, off-peak and on congested readings ($<$40\,mph).}
 \label{tab:peak}
-\small
+\footnotesize
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lccccccc}
 \toprule
- & \multicolumn{3}{c}{Peak} & \multicolumn{3}{c}{Off-peak} & Congested \\
+ & \multicolumn{3}{c}{Peak} & \multicolumn{3}{c}{Off-peak} & Cong. \\
 \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-8}
-Model & 15 & 30 & 60 & 15 & 30 & 60 & 60 min \\
+Model & 15 & 30 & 60 & 15 & 30 & 60 & 60 \\
 \midrule
-XGBoost per segment & 3.82 & 4.49 & 5.19 & 2.54 & 2.81 & 3.07 & 11.79 \\
+XGBoost & 3.82 & 4.49 & 5.19 & 2.54 & 2.81 & 3.07 & 11.79 \\
 ST-GAT & 3.57 & 4.19 & \textbf{4.88} & \textbf{2.43} & \textbf{2.67} & \textbf{2.96} & \textbf{10.66} \\
 Hybrid & \textbf{3.50} & \textbf{4.16} & 4.94 & 2.44 & 2.70 & 2.99 & 10.74 \\
 \bottomrule
@@ -431,20 +421,20 @@ Figure~\ref{fig:map} shows one evening rush hour. The per-segment models underes
 the slowdown spreads along the main corridor, while the two network models get closer to the
 observed speeds.
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{p2_congestion_map.png}
 \caption{Observed speeds during an evening peak and the forecasts made 60 minutes earlier.}
 \label{fig:map}
-\end{figure}
+\end{figure*}
 
 Over the whole test period, the hybrid is more accurate than XGBoost per segment at 79\,\% of
 the sensors at 60 minutes ahead (Fig.~\ref{fig:improve}). The largest improvements are on the
 long corridor that is congested most often.
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
-\includegraphics[width=0.62\textwidth]{p2_improvement_map.png}
+\includegraphics[width=\columnwidth]{p2_improvement_map.png}
 \caption{Change in 60-minute MAE for each sensor, hybrid minus XGBoost per segment (blue means
 the hybrid is better).}
 \label{fig:improve}
@@ -461,20 +451,28 @@ attention. For the hybrid, both the graph and cross-fitting are needed. With thi
 the hybrid is better than ST-GAT at every horizon (3.05 against 3.08\,mph); with longer
 training ST-GAT catches up because the hybrid starts to overfit.
 
-\begin{table}[H]
+\begin{table}[t]
 \centering
 \caption{Ablations: average test MAE (mph), each variant trained for 12 epochs.}
 \label{tab:abl}
-\small
-\begin{tabular}{lc@{\hspace{1.5cm}}lc}
+\footnotesize
+\begin{tabular}{lc}
 \toprule
-ST-GAT variant & MAE & Hybrid variant & MAE \\
+Variant & MAE \\
 \midrule
-Full model & \textbf{3.08} & Full hybrid & \textbf{3.05} \\
-Averaging instead of attention & 3.10 & XGBoost forecast as input only & 3.07 \\
-Attention over all sensor pairs & 3.14 & Without cross-fitting & 3.14 \\
-Without graph layers & 3.20 & Correction without graph & 3.16 \\
-Missing readings fed as 0\,mph & 3.23 & Linear correction & 3.19 \\
+\multicolumn{2}{l}{\textit{ST-GAT}} \\
+Full model & \textbf{3.08} \\
+Averaging instead of attention & 3.10 \\
+Attention over all sensor pairs & 3.14 \\
+Without graph layers & 3.20 \\
+Missing readings fed as 0\,mph & 3.23 \\
+\midrule
+\multicolumn{2}{l}{\textit{Hybrid}} \\
+Full hybrid & \textbf{3.05} \\
+XGBoost forecast as input only & 3.07 \\
+Without cross-fitting & 3.14 \\
+Correction without graph & 3.16 \\
+Linear correction & 3.19 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -486,9 +484,9 @@ XGBoost forecast, improves quickly in the first epochs and then levels off, whil
 error keeps going down. This is why the hybrid is the better model after a short training run
 and ST-GAT catches up when both are trained for 40 epochs.
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{p2_learning_curves.png}
+\includegraphics[width=\columnwidth]{p2_learning_curves.png}
 \caption{Training and validation MAE per epoch (dots: best epoch; dotted lines: learning-rate
 halvings).}
 \label{fig:curves}
@@ -504,14 +502,15 @@ the plan is switched on in time for 20\,\% (XGBoost), 30\,\% (ST-GAT) and 36\,\%
 onsets, with fewer false activations. METR-LA has no signal timings or turning counts, so this
 only measures when a decision would be made, not how much delay it would save.
 
-\begin{table}[H]
+\begin{table}[t]
 \centering
-\caption{Offline signal-plan simulation on the test period.}
+\caption{Offline signal-plan simulation on the test period: onsets anticipated, false
+activations, and plan switches per sensor-day.}
 \label{tab:signal}
-\small
+\footnotesize
 \begin{tabular}{lccc}
 \toprule
-Policy & Onsets anticipated (\%) & False activations (\%) & Switches per sensor-day \\
+Policy & Anticip.\ (\%) & False (\%) & Switches \\
 \midrule
 React to current speed & 0.0 & 10.6 & 6.6 \\
 XGBoost per segment & 19.8 & 7.7 & 4.1 \\
