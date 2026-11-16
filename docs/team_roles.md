@@ -2,22 +2,21 @@
 
 Each member owns one part of the Phase 2 rubric end to end: the code, the report
 section, the slides and the viva questions for it. Owning a part means you can explain
-every line of it and answer questions on it without help. Replace "Member 1" to
-"Member 5" with your names.
+every line of it and answer questions on it without help.
 
 Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
 
 | Member | Owns | Rubric items |
 |---|---|---|
-| 1 | Data, the per-segment XGBoost baseline and the "gap" | DL dataset, theoretical rigour |
-| 2 | ST-GAT, the graph attention network | Architecture logic, regularisation |
-| 3 | The XGBoost → GAT hybrid | Hybrid innovation |
-| 4 | Ablations, statistics and tests | Ablation studies, technical validation |
-| 5 | Literature, deliverables (maps, signal simulation, app) and the final package | DL literature review, GitHub repo, presentation |
+| 1 · Deepanshu | Data, the per-segment XGBoost baseline and the "gap" | DL dataset, theoretical rigour |
+| 2 · Kanishk Sharma | ST-GAT, the graph attention network | Architecture logic, regularisation |
+| 3 · Adarsh | The XGBoost → GAT hybrid | Hybrid innovation |
+| 4 · Daksh Yadav | Ablations, statistics and tests | Ablation studies, technical validation |
+| 5 · Hrishabh Prajapati | Literature, deliverables (maps, signal simulation, app) and the final package | DL literature review, GitHub repo, presentation |
 
 ---
 
-## Member 1: data, baseline and the gap
+## Deepanshu (Member 1): data, baseline and the gap
 
 **Story to tell:** a strong model per road segment still misses what its neighbours know.
 
@@ -33,7 +32,7 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
 - **Viva:** sections 1 and 4 of `viva_notes.md`. Be ready for: why speed only (no flow or
   occupancy), why a chronological split, how outages are masked, what the gap equation says.
 
-## Member 2: ST-GAT architecture
+## Kanishk Sharma (Member 2): ST-GAT architecture
 
 **Story to tell:** attention over upstream and downstream neighbours on the fixed road graph.
 
@@ -50,7 +49,7 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
   why attention is shared across a window, why GAT generalises mean aggregation, every
   regulariser and why it is there.
 
-## Member 3: the hybrid
+## Adarsh (Member 3): the hybrid
 
 **Story to tell:** XGBoost does each segment, graph attention corrects it with the network.
 
@@ -69,7 +68,7 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
   every horizon (3.05 vs 3.08); with long training it starts to overfit (validation
   plateaus while training keeps falling).
 
-## Member 4: ablations, statistics and tests
+## Daksh Yadav (Member 4): ablations, statistics and tests
 
 **Story to tell:** every design choice is measured, and every claim is tested.
 
@@ -88,7 +87,7 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
   3.14, no graph 3.20, outages as 0 mph 3.23; hybrid full 3.05, no residual 3.07, no
   cross-fitting 3.14, no graph 3.16 (`results/tables/p2_ablation_*.csv`).
 
-## Member 5: literature, deliverables and the final package
+## Hrishabh Prajapati (Member 5): literature, deliverables and the final package
 
 **Story to tell:** where this sits in the literature, and what the forecasts are good for.
 
@@ -114,6 +113,6 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
   gain disappears without the graph.*
 - Read sections 8 (limitations) and 9 (hard questions) of `viva_notes.md`.
 - Be able to run `pytest` and the app on your own machine.
-- **Presentation order:** Member 5 opens (the question) → 1 (data, baseline, gap) →
-  2 (ST-GAT) → 3 (hybrid) → 4 (results, ablations, validation) → 5 (maps, signal
-  simulation, conclusions).
+- **Presentation order:** Hrishabh Prajapati opens (the question) → Deepanshu (data, baseline, gap) →
+  Kanishk Sharma (ST-GAT) → Adarsh (hybrid) → Daksh Yadav (results, ablations, validation) →
+  Hrishabh Prajapati (maps, signal simulation, conclusions).

@@ -1,0 +1,351 @@
+{
+  "xgb_trees": {
+    "median": 113.0,
+    "min": 26,
+    "max": 384,
+    "q25": 75.0,
+    "q75": 153.5,
+    "sensors": 207
+  },
+  "xgb_mae": {
+    "train_out_of_fold": 2.9870636463165283,
+    "train_in_sample": 2.6939444541931152,
+    "validation": 3.0721099376678467,
+    "test": 3.201199531555176
+  },
+  "xgb_importance_groups": {
+    "usual speed at target times": 0.5709805320241506,
+    "recent speeds (12 lags)": 0.23974331744293825,
+    "last-hour statistics": 0.09385038285979964,
+    "calendar": 0.06053898035488859,
+    "current level vs. usual (profile, anomaly)": 0.029862135796187666,
+    "missing-data flags": 0.0050246515220352846
+  },
+  "xgb_importance_top10": {
+    "lag_0": 0.14279229214735936,
+    "profile_t+7": 0.10638452849143773,
+    "profile_t+6": 0.10404340173056055,
+    "profile_t+8": 0.08050457210277681,
+    "roll_mean": 0.06164187944638643,
+    "profile_t+9": 0.05508585912806877,
+    "profile_t+10": 0.047625815574823566,
+    "profile_t+11": 0.046622008439029396,
+    "profile_t+12": 0.039235392560931955,
+    "profile_t+5": 0.03236748107741139
+  },
+  "xgb_importance_sensors": [
+    "718496",
+    "773996",
+    "717453",
+    "769467",
+    "717465",
+    "716955",
+    "717823",
+    "718379",
+    "772178",
+    "718066",
+    "716951",
+    "760650",
+    "767494",
+    "717447",
+    "717463",
+    "718072",
+    "773062",
+    "761599",
+    "769373",
+    "773953",
+    "769388",
+    "717608",
+    "773906",
+    "717576",
+    "717573",
+    "765265",
+    "773869",
+    "767585",
+    "767620",
+    "716939"
+  ],
+  "stgat_shapes": [
+    [
+      "1x1 input convolution",
+      [
+        1,
+        64,
+        207,
+        12
+      ]
+    ],
+    [
+      "block 1: gated temporal conv",
+      [
+        1,
+        64,
+        207,
+        10
+      ]
+    ],
+    [
+      "block 1: directional GAT",
+      [
+        1,
+        10,
+        207,
+        64
+      ]
+    ],
+    [
+      "block 1: gated temporal conv",
+      [
+        1,
+        64,
+        207,
+        8
+      ]
+    ],
+    [
+      "block 2: gated temporal conv",
+      [
+        1,
+        64,
+        207,
+        6
+      ]
+    ],
+    [
+      "block 2: directional GAT",
+      [
+        1,
+        6,
+        207,
+        64
+      ]
+    ],
+    [
+      "block 2: gated temporal conv",
+      [
+        1,
+        64,
+        207,
+        4
+      ]
+    ],
+    [
+      "output gated conv",
+      [
+        1,
+        64,
+        207,
+        1
+      ]
+    ],
+    [
+      "MLP head",
+      [
+        1,
+        207,
+        12
+      ]
+    ]
+  ],
+  "stgat_params": {
+    "node embedding": 3312,
+    "input convolution": 1472,
+    "ST block 1": 57984,
+    "ST block 2": 57984,
+    "output gated conv": 32896,
+    "MLP head": 9868
+  },
+  "stgat_gat_params": {
+    "block 1 GAT": 8448,
+    "block 2 GAT": 8448
+  },
+  "stgat_total_params": 163516,
+  "hybrid_shapes": [
+    [
+      "1x1 input convolution",
+      [
+        1,
+        64,
+        207,
+        12
+      ]
+    ],
+    [
+      "block 1: gated temporal conv",
+      [
+        1,
+        64,
+        207,
+        10
+      ]
+    ],
+    [
+      "block 1: directional GAT",
+      [
+        1,
+        10,
+        207,
+        64
+      ]
+    ],
+    [
+      "block 1: gated temporal conv",
+      [
+        1,
+        64,
+        207,
+        8
+      ]
+    ],
+    [
+      "block 2: gated temporal conv",
+      [
+        1,
+        64,
+        207,
+        6
+      ]
+    ],
+    [
+      "block 2: directional GAT",
+      [
+        1,
+        6,
+        207,
+        64
+      ]
+    ],
+    [
+      "block 2: gated temporal conv",
+      [
+        1,
+        64,
+        207,
+        4
+      ]
+    ],
+    [
+      "output gated conv",
+      [
+        1,
+        64,
+        207,
+        1
+      ]
+    ],
+    [
+      "base-forecast embedding",
+      [
+        1,
+        207,
+        64
+      ]
+    ],
+    [
+      "fusion layer",
+      [
+        1,
+        207,
+        64
+      ]
+    ],
+    [
+      "fusion GAT",
+      [
+        1,
+        1,
+        207,
+        64
+      ]
+    ],
+    [
+      "MLP head",
+      [
+        1,
+        207,
+        12
+      ]
+    ]
+  ],
+  "hybrid_params": {
+    "node embedding": 3312,
+    "input convolution": 1472,
+    "ST block 1": 57984,
+    "ST block 2": 57984,
+    "output gated conv": 32896,
+    "MLP head": 9868,
+    "base-forecast embedding": 832,
+    "fusion layer": 8256,
+    "fusion GAT": 8448
+  },
+  "hybrid_gat_params": {
+    "block 1 GAT": 8448,
+    "block 2 GAT": 8448
+  },
+  "hybrid_total_params": 181052,
+  "horizon_mae": {
+    "XGBoost per segment": {
+      "5": 2.3892,
+      "10": 2.6905,
+      "15": 2.8884,
+      "20": 3.0408,
+      "25": 3.1594,
+      "30": 3.2577,
+      "35": 3.3416,
+      "40": 3.4126,
+      "45": 3.4765,
+      "50": 3.5329,
+      "55": 3.5867,
+      "60": 3.6382
+    },
+    "ST-GAT": {
+      "5": 2.3281,
+      "10": 2.5505,
+      "15": 2.7355,
+      "20": 2.8708,
+      "25": 2.9805,
+      "30": 3.0789,
+      "35": 3.1639,
+      "40": 3.2344,
+      "45": 3.2969,
+      "50": 3.3556,
+      "55": 3.4115,
+      "60": 3.4711
+    },
+    "Hybrid XGB\u2192GAT": {
+      "5": 2.2936,
+      "10": 2.5425,
+      "15": 2.724,
+      "20": 2.8687,
+      "25": 2.9901,
+      "30": 3.0948,
+      "35": 3.187,
+      "40": 3.2656,
+      "45": 3.3382,
+      "50": 3.4001,
+      "55": 3.458,
+      "60": 3.5156
+    }
+  },
+  "hybrid_correction_mph": {
+    "mean_abs_all": 0.9529853463172913,
+    "mean_abs_peak": 1.7081506252288818,
+    "mean_abs_offpeak": 0.6982165575027466,
+    "mean_abs_congested_target": 3.266097068786621,
+    "mean_abs_by_horizon": [
+      0.5252933502197266,
+      0.7526904344558716,
+      0.8797239065170288,
+      0.9439816474914551,
+      0.982540488243103,
+      1.0129969120025635,
+      1.044862151145935,
+      1.0516867637634277,
+      1.0677685737609863,
+      1.0652841329574585,
+      1.0601921081542969,
+      1.0488027334213257
+    ],
+    "share_corrections_over_2mph": 0.09497837253311706
+  }
+}

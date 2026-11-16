@@ -1,0 +1,18 @@
+\begin{table}[H]
+\centering
+\caption{What the per-segment XGBoost models use: share of the total split gain by feature group, averaged over 30 random sensors.}
+\label{tab:xgbgroups}
+\small
+\begin{tabular}{lr}
+\toprule
+Feature group & Share of gain \\
+\midrule
+usual speed at target times & 57.1\,\% \\
+recent speeds (12 lags) & 24.0\,\% \\
+last-hour statistics & 9.4\,\% \\
+calendar & 6.1\,\% \\
+current level vs. usual (profile, anomaly) & 3.0\,\% \\
+missing-data flags & 0.5\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}

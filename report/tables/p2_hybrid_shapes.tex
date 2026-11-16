@@ -1,0 +1,25 @@
+\begin{table}[H]
+\centering
+\caption{Tensor shape after each layer of the hybrid for one window, measured with forward hooks. Convolutions use (batch, channels, sensors, steps), attention layers (batch, steps, sensors, channels), the base-forecast and fusion layers (batch, sensors, channels), and the head (batch, sensors, horizons).}
+\label{tab:hybridshapes}
+\small
+\begin{tabular}{ll}
+\toprule
+Layer & Output shape \\
+\midrule
+input window (6 channels) + node embedding (16) & $(1, 22, 207, 12)$ \\
+1x1 input convolution & $(1, 64, 207, 12)$ \\
+block 1: gated temporal conv & $(1, 64, 207, 10)$ \\
+block 1: directional GAT & $(1, 10, 207, 64)$ \\
+block 1: gated temporal conv & $(1, 64, 207, 8)$ \\
+block 2: gated temporal conv & $(1, 64, 207, 6)$ \\
+block 2: directional GAT & $(1, 6, 207, 64)$ \\
+block 2: gated temporal conv & $(1, 64, 207, 4)$ \\
+output gated conv & $(1, 64, 207, 1)$ \\
+base-forecast embedding & $(1, 207, 64)$ \\
+fusion layer & $(1, 207, 64)$ \\
+fusion GAT & $(1, 1, 207, 64)$ \\
+MLP head & $(1, 207, 12)$ \\
+\bottomrule
+\end{tabular}
+\end{table}

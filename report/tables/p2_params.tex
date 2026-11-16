@@ -1,0 +1,26 @@
+\begin{table}[H]
+\centering
+\caption{Trainable parameters of ST-GAT and the hybrid by module.}
+\label{tab:params}
+\small
+\begin{tabular}{lr}
+\toprule
+Module & Parameters \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{ST-GAT}} \\
+node embedding & 3,312 \\
+input convolution & 1,472 \\
+ST block 1 & 57,984 \\
+ST block 2 & 57,984 \\
+output gated conv & 32,896 \\
+MLP head & 9,868 \\
+\textbf{total} & \textbf{163,516} \\
+\midrule \\
+\multicolumn{2}{@{}l}{\emph{Hybrid: additional modules}} \\
+base-forecast embedding & 832 \\
+fusion layer & 8,256 \\
+fusion GAT & 8,448 \\
+\textbf{total} & \textbf{181,052} \\
+\bottomrule
+\end{tabular}
+\end{table}
