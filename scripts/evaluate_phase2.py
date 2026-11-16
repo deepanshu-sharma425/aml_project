@@ -35,22 +35,21 @@ RES = ROOT / "results"
 FIG, TAB, TEX = RES / "figures", RES / "tables", ROOT / "report" / "tables"
 plt = P.plt
 
-MAIN = {  # file stem -> display name; order = table order and colour slot
+MAIN = {  # file stem -> display name; order = table order and colour slot.
+    # The three Phase 2 models (XGBoost per segment, ST-GAT, hybrid) plus the simple
+    # Phase 1 baselines that need no training; the Phase 1 Graph WaveNet is not compared.
     "ha": "Historical Average",
     "persistence": "Persistence",
     "ridge": "Ridge (features)",
     "hgb": "Gradient Boosting (features)",
     "xgb_seg": "XGBoost per segment",
-    "lstm_main": "LSTM",
-    "gwnet_full_main": "Graph WaveNet",
     "stgat_attention_main": "ST-GAT",
     "hybrid_attention_main": "Hybrid XGB$\\to$GAT",
 }
 PLAIN = {k: v.replace("$\\to$", "→") for k, v in MAIN.items()}
 COLOR = {"ha": "#898781", "persistence": "#c3c2b7", "ridge": "#52514e", "hgb": P.SERIES[3],
-         "xgb_seg": P.SERIES[1], "lstm_main": P.SERIES[4], "gwnet_full_main": P.SERIES[6],
-         "stgat_attention_main": P.SERIES[0], "hybrid_attention_main": P.SERIES[2]}
-KEY = ["xgb_seg", "gwnet_full_main", "stgat_attention_main", "hybrid_attention_main"]
+         "xgb_seg": P.SERIES[1], "stgat_attention_main": P.SERIES[0], "hybrid_attention_main": P.SERIES[2]}
+KEY = ["xgb_seg", "stgat_attention_main", "hybrid_attention_main"]   # the three Phase 2 models
 ABL_STGAT = {
     "stgat_attention_ablation": "Road-graph attention (full)",
     "stgat_mean_ablation": "Mean aggregation (no attention)",
@@ -352,9 +351,8 @@ def linear_neighbour_correction(data, fb, rows: int = 50_000):
 # =============================================================== significance
 def significance(preds, y):
     pairs = [("hybrid_attention_main", "xgb_seg"), ("stgat_attention_main", "xgb_seg"),
-             ("hybrid_attention_main", "stgat_attention_main"), ("hybrid_attention_main", "gwnet_full_main"),
-             ("stgat_attention_main", "gwnet_full_main"), ("hybrid_attention_main", "hgb"),
-             ("xgb_seg", "hgb")]
+             ("hybrid_attention_main", "stgat_attention_main"), ("stgat_attention_main", "hgb"),
+             ("hybrid_attention_main", "hgb"), ("xgb_seg", "hgb")]
     rows = []
     for a, b in pairs:
         if a not in preds or b not in preds:

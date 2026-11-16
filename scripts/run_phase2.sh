@@ -50,9 +50,6 @@ run hybrid_none_ablation      --spatial none      --base xgb_oof      $A
 run hybrid_noresid_ablation   --spatial attention --base xgb_oof --no-residual $A
 run hybrid_insample_ablation  --spatial attention --base xgb_insample $A
 
-# Temporal-only deep baseline (Phase 1 definition: raw inputs, no graph)
-train lstm_main --model lstm --epochs 30 --patience 6
-
 echo "=== evaluate  $(date '+%H:%M')"
 $PY -W ignore scripts/evaluate_phase2.py > results/logs/evaluate_phase2.log 2>&1 || FAILED+=(evaluate)
 if (( ${#FAILED[@]} )); then echo "FAILED: ${FAILED[*]}"; exit 1; fi

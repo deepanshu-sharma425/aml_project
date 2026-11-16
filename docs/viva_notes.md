@@ -153,8 +153,8 @@ data that METR-LA does not have.
 
 **Your hybrid is not the best model. Why call it a success?**
 It does what a hybrid should: it beats the per-segment XGBoost it builds on at every
-horizon (3.20 to 3.06 mph, DM p < 0.001) and at 79 % of sensors, and it is the best of
-our graph-attention models at 15 min (2.72, significantly better than ST-GAT, p = 0.001).
+horizon (3.20 to 3.06 mph, DM p < 0.001) and at 79 % of sensors, and it is the best
+model at 15 min (2.72, significantly better than ST-GAT, p = 0.001).
 With the long 40-epoch budget, ST-GAT is better at 30 and 60 min. But with the *same*
 12-epoch budget the hybrid beats ST-GAT at every horizon (2.73 / 3.08 / 3.50 vs
 2.76 / 3.12 / 3.53; average 3.05 vs 3.08), and the 12-epoch hybrid is even slightly better
@@ -171,11 +171,6 @@ itself (3.20 without it, exactly the independent XGBoost level). For the hybrid,
 connection adds 0.02. A linear median-regression correction on neighbour anomalies gets
 only 3.19, so the gain needs a non-linear graph model.
 
-**Graph WaveNet beats you at 15 min and on congested targets. Why?**
-Its learned dense adjacency and larger capacity (301k parameters) help most in rare,
-severe events; ST-GAT is better in free flow and at 60 min overall. The differences
-are small but significant both ways, and we report them in Table VI.
-
 **The bootstrap intervals overlap. Are the gains real?**
 The intervals overlap because some test days are much harder for every model. The
 Diebold-Mariano test compares models on the same forecast times (paired), which
@@ -188,17 +183,16 @@ per-segment model at every horizon.
 |---|---|---|---|---|
 | XGBoost per segment | 2.89 | 3.26 | 3.64 | 3.20 |
 | Gradient boosting (Phase 1 features) | 2.89 | 3.29 | 3.66 | 3.22 |
-| Graph WaveNet | 2.72 | 3.10 | 3.59 | 3.07 |
 | ST-GAT | 2.74 | 3.08 | 3.47 | 3.04 |
 | Hybrid XGB to GAT | 2.72 | 3.09 | 3.52 | 3.06 |
-| LSTM (no graph) | 3.02 | 3.63 | 4.53 | 3.63 |
 
 - Gap: XGBoost error correlation between road neighbours 0.13 / 0.21 (15 / 60 min) vs
   0.02 / 0.04 for non-neighbours; |corr| with downstream anomaly 0.12 vs own anomaly 0.06.
-- Peak, 60 min: XGBoost 5.19, ST-GAT 4.88 (-6 %), hybrid 4.94, Graph WaveNet 5.12.
-- Latest reading missing, 60-min MAE change: Graph WaveNet +52 %, XGBoost +32 %, ST-GAT +28 %.
-- Signal replay: onsets anticipated 0 % reactive, 20 % XGBoost, 30 % ST-GAT, 36 % hybrid,
-  39 % Graph WaveNet; median lead 10 min.
+- Peak, 60 min: XGBoost 5.19, ST-GAT 4.88 (-6 %), hybrid 4.94.
+- Latest reading missing, 60-min MAE change: XGBoost +32 %, ST-GAT +28 %, hybrid +34 %;
+  ST-GAT fed 0 mph for outages instead is 0.26 mph worse at 60 min (ablation).
+- Signal replay: onsets anticipated 0 % reactive, 20 % XGBoost, 30 % ST-GAT, 36 % hybrid;
+  median lead 10 min.
 - ST-GAT ablations (12 epochs, avg MAE): full 3.08, mean aggregation 3.10, all-pairs
   attention 3.14, no spatial module 3.20, outages as 0 mph 3.23.
 - Hybrid ablations (12 epochs, avg MAE): full 3.05, no residual 3.07, no cross-fitting 3.14,

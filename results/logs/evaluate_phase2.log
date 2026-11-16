@@ -19,8 +19,6 @@ gap: {
             Ridge (features)       3.371       3.780       4.093    3.686
 Gradient Boosting (features)       2.893       3.289       3.656    3.219
          XGBoost per segment       2.888       3.258       3.638    3.201
-                        LSTM       3.018       3.625       4.530    3.627
-               Graph WaveNet       2.717       3.104       3.587    3.074
                       ST-GAT       2.735       3.079       3.471    3.040
               Hybrid XGB→GAT       2.724       3.095       3.516    3.057
                        model  MAE60_latest_observed  MAE60_latest_missing  degradation_%
@@ -29,8 +27,6 @@ Gradient Boosting (features)       2.893       3.289       3.656    3.219
             Ridge (features)                  4.060                 5.235         28.926
 Gradient Boosting (features)                  3.631                 4.499         23.898
          XGBoost per segment                  3.606                 4.750         31.739
-                        LSTM                  4.460                 6.906         54.823
-               Graph WaveNet                  3.535                 5.359         51.580
                       ST-GAT                  3.444                 4.410         28.073
               Hybrid XGB→GAT                  3.482                 4.658         33.768
                                  variant  15 min MAE  30 min MAE  60 min MAE  avg MAE
@@ -50,7 +46,6 @@ attention: {'down_neighbour_mass_congested': 0.8664039969444275, 'down_neighbour
               policy  onsets  anticipated_%  median_lead_min  false_activation_%  switches_per_sensor_day  plan_on_%
 Reactive (speed now)    6554           0.00              0.0               10.63                     6.64      12.29
  XGBoost per segment    6554          19.80             10.0                7.68                     4.13      10.57
-       Graph WaveNet    6554          39.20             10.0                5.91                     3.84      11.34
               ST-GAT    6554          30.10             10.0                7.72                     3.44      10.98
       Hybrid XGB→GAT    6554          35.72             10.0                6.00                     3.80      11.00
 Oracle (true future)    6554         100.00             15.0                0.00                     6.85      10.84

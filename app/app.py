@@ -32,7 +32,7 @@ from traffic.trainer import Trainer, pick_device
 CKPT = ROOT / "checkpoints" / "stgat_attention_main.pt"   # best stand-alone model
 # Fixed legend order = fixed categorical slot per model
 MODELS = {"hybrid_attention_main": "Hybrid XGB→GAT", "stgat_attention_main": "ST-GAT",
-          "gwnet": "Graph WaveNet", "xgb_seg": "XGBoost per segment", "hgb": "Gradient Boosting",
+          "xgb_seg": "XGBoost per segment", "hgb": "Gradient Boosting",
           "ridge": "Ridge", "persistence": "Persistence", "ha": "Historical Average"}
 RESULTS = ROOT / "results"
 HORIZONS = {"15 min": 3, "30 min": 6, "60 min": 12}
@@ -73,7 +73,7 @@ def test_set_metrics() -> dict[str, dict]:
     """Saved test-set metrics per model; ST-GAT is re-scored only if its file is missing."""
     out = {}
     for key, name in MODELS.items():
-        f = ROOT / "results" / "metrics" / f"{'gwnet_full_main' if key == 'gwnet' else key}.json"
+        f = ROOT / "results" / "metrics" / f"{key}.json"
         if f.exists():
             out[name] = json.loads(f.read_text())["metrics"]
     if "ST-GAT" not in out:
@@ -421,7 +421,7 @@ with gat_tab:
             st.markdown("**Peak vs off-peak** · MAE (mph); peak = weekdays 06–10 and 15–19")
             piv = (reg[reg.regime.isin(["peak", "off-peak", "congested (<40 mph)"])]
                    .pivot_table(index="model", columns=["regime", "horizon"], values="MAE"))
-            order = [n for n in ["Hybrid XGB→GAT", "ST-GAT", "Graph WaveNet", "XGBoost per segment",
+            order = [n for n in ["Hybrid XGB→GAT", "ST-GAT", "XGBoost per segment",
                                  "Gradient Boosting (features)", "Historical Average"] if n in piv.index]
             st.dataframe(piv.loc[order].style.format("{:.2f}").highlight_min(axis=0, props="font-weight:700"),
                          width="stretch")

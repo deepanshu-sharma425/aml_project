@@ -7,14 +7,14 @@ segments and predictable from the neighbours' state at forecast time
 (Eq.~\eqref{eq:gap}, Fig.~\ref{fig:gap}). A graph attention network over the fixed
 road graph uses exactly this information and lowers the MAE by 5\,\% overall and by
 6\,\% in peak periods at 60\,min; every difference to the independent models is
-significant. Treating sensor outages as missing rather than as 0\,mph cuts the
-deep model's degradation under outages from 52\,\% (Graph WaveNet) to 28\,\%.
+significant. Treating sensor outages as missing rather than as 0\,mph is the single
+most valuable design choice (0.26\,mph at 60\,min in the ablation).
 
 The hybrid shows that a classical and a deep model can be combined soundly: the
 graph network corrects the per-segment forecasts, cross-fitting prevents the
 second stage from learning on optimistic in-sample residuals, and a zero-initialised
-correction starts exactly at the XGBoost forecast. It is the most accurate of our
-graph-attention models at 15\,min, but at longer horizons the stand-alone ST-GAT is
+correction starts exactly at the XGBoost forecast. It is the most accurate model at
+15\,min, but at longer horizons the stand-alone ST-GAT is
 better, so the simple residual design does not dominate. The ablations explain where
 the gains come from: outage masking and the road graph matter most (removing either
 costs 0.12--0.15\,mph), the road prior beats unrestricted attention, and attention

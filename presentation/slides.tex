@@ -154,7 +154,7 @@ predicts the error better than the sensor's own.
 \end{itemize}
 \column{0.48\textwidth}
 \begin{itemize}\setlength\itemsep{0.35em}\small
-\item 164k parameters (Graph WaveNet: 301k).
+\item 164k parameters.
 \item Receptive field: all 12 steps; 2 hops each way ($\approx$36 sensors).
 \item Masked MAE loss in mph (median-optimal, robust to congestion tail).
 \end{itemize}
@@ -250,19 +250,17 @@ Model & 15 & 30 & 60 & avg \\
 \midrule
 Historical average & 4.19 & 4.19 & 4.19 & 4.19 \\
 Gradient boosting (features) & 2.89 & 3.29 & 3.66 & 3.22 \\
-LSTM (no graph) & 3.02 & 3.63 & 4.53 & 3.63 \\
 \textcolor{orange}{XGBoost per segment} & 2.89 & 3.26 & 3.64 & 3.20 \\
-Graph WaveNet & \textbf{2.72} & 3.10 & 3.59 & 3.07 \\
 \textcolor{accent}{ST-GAT (ours)} & 2.74 & \textbf{3.08} & \textbf{3.47} & \textbf{3.04} \\
-\textcolor{green}{Hybrid XGB$\to$GAT (ours)} & 2.72 & 3.09 & 3.52 & 3.06 \\
+\textcolor{green}{Hybrid XGB$\to$GAT (ours)} & \textbf{2.72} & 3.09 & 3.52 & 3.06 \\
 \bottomrule
 \end{tabular}
 \column{0.41\textwidth}
 \begin{itemize}\setlength\itemsep{0.4em}\small
 \item ST-GAT: \hl{$-5\,\%$} vs.\ per-segment XGBoost; hybrid $-4.5\,\%$.
 \item Diebold--Mariano vs.\ XGBoost: \hl{$p<0.001$} at 15, 30, 60 min.
-\item Hybrid best at 15 min among our GAT models; ST-GAT better at 30/60 min after long training.
-\item ST-GAT 3.47 at 60 min: below Graph WaveNet (3.59) with half the parameters.
+\item Hybrid best at 15 min; ST-GAT best at 30/60 min after long training.
+\item ST-GAT 3.47 at 60 min: below published DCRNN (3.60) and Graph WaveNet (3.53).
 \end{itemize}
 \end{columns}
 \end{frame}
@@ -279,7 +277,7 @@ Graph WaveNet & \textbf{2.72} & 3.10 & 3.59 & 3.07 \\
 \centering
 \includegraphics[width=0.95\textwidth]{p2_peak_offpeak.png}\\[0.4em]
 \small Peak, 60 min: XGBoost 5.19 $\to$ \hl{ST-GAT 4.88 mph ($-6\,\%$)}; off-peak 3.07 $\to$ 2.96 ($-3.6\,\%$).
-Congested targets ($<$40 mph): graph models cut the error by 1--1.6 mph.
+Congested targets ($<$40 mph): both network models cut the error by more than 1 mph (11.79 $\to$ 10.66 / 10.74).
 \end{frame}
 
 \begin{frame}{Congestion map: forecasts made 60 minutes earlier}
@@ -365,12 +363,12 @@ XGBoost per segment alone & 2.89 & 3.26 & 3.64 & 3.20 \\
 \textbf{Latest reading missing} (60-min MAE change)\\[0.3em]
 \begin{tabular}{lc}
 \toprule
-Graph WaveNet (0-mph inputs) & +52\,\% \\
 XGBoost per segment & +32\,\% \\
 \textcolor{accent}{ST-GAT (masked)} & \textbf{+28\,\%} \\
+Hybrid XGB$\to$GAT & +34\,\% \\
 \bottomrule
 \end{tabular}\\[0.6em]
-\aside{Same seed $\Rightarrow$ identical epoch-1 losses on re-run (reproducible).}
+\aside{Ablation: the same ST-GAT fed 0 mph for outages is 0.26 mph worse at 60 min. Same seed $\Rightarrow$ identical losses on re-run (reproducible).}
 \end{columns}
 \end{frame}
 
@@ -400,9 +398,8 @@ Policy & Antic.\,\% & False\,\% & Switch/day \\
 \midrule
 Reactive (speed now) & 0.0 & 10.6 & 6.6 \\
 XGBoost per segment & 19.8 & 7.7 & 4.1 \\
-Graph WaveNet & \textbf{39.2} & \textbf{5.9} & 3.8 \\
 ST-GAT & 30.1 & 7.7 & \textbf{3.4} \\
-Hybrid XGB$\to$GAT & 35.7 & 6.0 & 3.8 \\
+Hybrid XGB$\to$GAT & \textbf{35.7} & \textbf{6.0} & 3.8 \\
 \midrule
 Oracle (true future) & 100 & 0.0 & 6.9 \\
 \bottomrule

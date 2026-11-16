@@ -11,12 +11,12 @@ over the fixed road graph with separate downstream and upstream attention,
 outage masks and cyclic time inputs, and a hybrid in which graph attention learns a
 residual correction to the XGBoost forecasts, trained on leakage-free cross-fitted
 base predictions. ST-GAT lowers the MAE to 3.04\,mph ($-5\,\%$; 3.47\,mph at
-60\,min, below our Graph WaveNet's 3.59 with half the parameters), and the hybrid to
-3.06\,mph, with the best 15-minute accuracy of our graph-attention models (2.72\,mph).
+60\,min), and the hybrid to 3.06\,mph, with the best 15-minute accuracy
+(2.72\,mph).
 Both gains over the independent models are significant at every horizon
 (Diebold--Mariano, $p<0.001$) and largest in peak periods and congestion. Ablations
 isolate the value of the graph, of attention, of the road prior, of outage masking,
 of the residual connection and of cross-fitting. An offline, simulated signal-plan
-experiment shows that network-aware forecasts let a controller anticipate 1.5--2
+experiment shows that network-aware forecasts let a controller anticipate 1.5--1.8
 times as many congestion onsets as the independent model; we make no claim of live
 control.

@@ -39,21 +39,17 @@ horizon with $p<0.001$ (Table~\ref{tab:p2dm}), and the hybrid is more accurate t
 XGBoost at 79\,\% of the sensors at 60\,min, most strongly along the congested
 central corridor (Fig.~\ref{fig:p2improve}). The two independent tabular models are
 close to each other (3.20 vs.\ 3.22\,mph), so the gain comes from the network, not
-from a better tabular learner. Depth alone does not explain it either: the LSTM, which sees each
-sensor's own raw history only, reaches 3.02\,mph at 15\,min but 4.53\,mph at 60\,min,
-worse than ridge regression (4.09), in line with the published FC-LSTM on METR-LA
-(3.44 and 4.37\,mph~\cite{li2018dcrnn}).
+from a better tabular learner. Nor does it come from depth alone: the ablation of
+Section~\ref{sec:p2abl} shows that ST-GAT without its graph layers falls back to the
+level of the independent models (3.20\,mph).
 
-\textbf{Among the network models the ranking depends on the horizon.} The hybrid is
-the most accurate of our models at 15\,min (2.72\,mph), significantly better than
+\textbf{Between the two network models the ranking depends on the horizon.} The
+hybrid is the most accurate model at 15\,min (2.72\,mph), significantly better than
 ST-GAT ($p=0.001$), because the per-segment XGBoost supplies a strong short-term level.
-At 30 and 60\,min ST-GAT is significantly better than the hybrid ($p<0.01$). ST-GAT
-is also the best model at 60\,min overall (3.47\,mph, against 3.59 for Graph WaveNet,
-$p<0.001$) with about half the parameters (164k vs.\ 301k). Graph WaveNet keeps a small
-but significant edge at 15\,min (2.72 vs.\ 2.74) and the lowest MAPE, which weights
-low-speed targets heavily. Our ST-GAT is comparable to published
-results under the same protocol (Table~\ref{tab:p2main}, bottom): at 60\,min it is
-below DCRNN (3.60) and the published Graph WaveNet (3.53) and close to GMAN (3.44).
+At 30 and 60\,min ST-GAT is significantly better than the hybrid ($p<0.01$) and the most
+accurate model (3.08 and 3.47\,mph). Our ST-GAT is comparable to published results under
+the same protocol (Table~\ref{tab:p2main}, bottom): at 60\,min it is below DCRNN (3.60)
+and Graph WaveNet (3.53) and close to GMAN (3.44).
 
 Uncertainty across days is large: the 95\,\% day-block bootstrap intervals of average
 MAE are $[2.85, 3.16]$ for ST-GAT, $[2.87, 3.18]$ for the hybrid and $[2.99, 3.35]$
@@ -75,12 +71,11 @@ same forecast times and are therefore far more sensitive to the paired differenc
 The gains concentrate where traffic is hard (Table~\ref{tab:p2regime},
 Fig.~\ref{fig:peak}). In peak periods at 60\,min, ST-GAT lowers XGBoost's MAE from
 5.19 to 4.88\,mph ($-6.0\,\%$), against $-3.6\,\%$ off-peak (3.07$\to$2.96). On
-congested targets ($<$40\,mph) all graph models cut the 60-minute error of the
-independent model by roughly 1--1.6\,mph (11.79$\to$10.14--10.74), which is what
-propagation along the road graph should buy. Graph WaveNet is the best model on
-congested targets, while ST-GAT is best in free flow; the learned dense adjacency
-of Graph WaveNet seems to help most in the rare, severe events, at the price of
-slightly worse free-flow accuracy.
+congested targets ($<$40\,mph) both network models cut the 60-minute error of the
+independent model by more than 1\,mph (11.79$\to$10.66 for ST-GAT and 10.74 for the
+hybrid), which is what propagation along the road graph should buy. The hybrid is the
+most accurate model in peak periods at 15 and 30\,min (3.50 and 4.16\,mph), and ST-GAT
+at 60\,min and in free flow.
 
 \begin{figure}[t]
 \centering
@@ -93,9 +88,11 @@ congested targets.}
 \subsection{Outage robustness}
 \input{tables/p2_robustness}
 Masking outages instead of feeding them as 0\,mph (Section~\ref{sec:dldata}) fixes
-the weakness found in Phase~1 (Table~\ref{tab:p2robust}). When a sensor's latest
-reading is missing, Graph WaveNet's 60-minute MAE rises by 52\,\%, ST-GAT's by only
-28\,\%, which is in line with the forward-filled tabular models (24--32\,\%).
+the outage weakness found for the Phase~1 deep model (Section~\ref{sec:results}). When
+a sensor's latest reading is missing, ST-GAT's 60-minute MAE rises by 28\,\%
+(Table~\ref{tab:p2robust}), in line with the forward-filled tabular models
+(24--32\,\%); the ablation of Section~\ref{sec:p2abl} shows that the same network fed
+0\,mph for outages is 0.26\,mph worse at 60\,min.
 
 \subsection{Ablations}
 \label{sec:p2abl}
@@ -177,11 +174,11 @@ neighbours by the sensor's current state.}
 Table~\ref{tab:p2signal} replays the test period offline: a controller per sensor
 switches to a congestion plan when it expects $<$40\,mph in 15\,minutes. A reactive
 controller cannot anticipate any onset by construction. With forecasts, the plan is
-already on 5--30 minutes before 20\,\% (XGBoost per segment) to 39\,\% (Graph
-WaveNet) of the 6,554 congestion onsets, with a median lead time of 10\,minutes, while
+already on 5--30 minutes before 20\,\% (XGBoost per segment), 30\,\% (ST-GAT) and
+36\,\% (hybrid) of the 6,554 congestion onsets, with a median lead time of 10\,minutes, while
 false activations and plan switches fall compared with reactive control (e.g.\
 10.6\,\%$\to$6.0\,\% false and 6.6$\to$3.8 switches per sensor-day for the hybrid).
-The network models anticipate 1.5--2 times as many onsets as the independent model.
+The network models anticipate 1.5--1.8 times as many onsets as the independent model.
 These are statements about \emph{decision timing} only: METR-LA has no turning
 movements or signal timings, so we make no claim about delay, throughput or live
 control.

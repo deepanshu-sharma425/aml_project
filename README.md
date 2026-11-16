@@ -25,11 +25,9 @@ history.
 | Persistence | 3.50 | 4.21 | 5.38 | 4.24 |
 | Ridge (our features) | 3.37 | 3.78 | 4.09 | 3.69 |
 | Gradient boosting (our features) | 2.89 | 3.29 | 3.66 | 3.22 |
-| LSTM (own history only, no graph) | 3.02 | 3.63 | 4.53 | 3.63 |
 | **XGBoost per segment** (207 independent models) | 2.89 | 3.26 | 3.64 | 3.20 |
-| Graph WaveNet | **2.72** | 3.10 | 3.59 | 3.07 |
 | **ST-GAT** (graph attention, ours) | 2.74 | **3.08** | **3.47** | **3.04** |
-| **Hybrid XGBoost → GAT** (ours) | 2.72 | 3.09 | 3.52 | 3.06 |
+| **Hybrid XGBoost → GAT** (ours) | **2.72** | 3.09 | 3.52 | 3.06 |
 
 What we found:
 
@@ -40,9 +38,9 @@ What we found:
 - **Graph attention uses it.** ST-GAT cuts the per-segment error by 5% overall and by
   6% at rush hour (60 min ahead). Both ST-GAT and the hybrid beat the independent
   models at every horizon, with Diebold-Mariano p < 0.001.
-- **The hybrid is best at 15 minutes** among our graph-attention models, but ST-GAT on
-  its own is better at 30 and 60 minutes. ST-GAT is also the best model at 60 minutes
-  overall (3.47 vs 3.59 for Graph WaveNet) with about half the parameters.
+- **The hybrid is best at 15 minutes** (2.72), ST-GAT at 30 and 60 minutes (3.08 and
+  3.47). At 60 minutes ST-GAT is below the published DCRNN (3.60) and Graph WaveNet
+  (3.53) results on the same benchmark.
 - **Ablations show where the gain comes from.** With the same short training budget for
   every variant: removing the graph from ST-GAT takes it back to the per-segment level
   (3.08 → 3.20 mph), feeding outages as 0 mph is even worse (3.23), attention over all
@@ -50,11 +48,12 @@ What we found:
   over plain neighbour averaging. For the hybrid, the graph (3.05 vs 3.16 without it) and
   cross-fitting (3.05 vs 3.14 without it) are both essential, and at this equal budget the
   hybrid beats ST-GAT at every horizon.
-- **Masking outages helps.** When a sensor's latest reading is missing, Graph WaveNet
-  (which sees an outage as 0 mph) gets 52% worse at 60 minutes, ST-GAT only 28%.
+- **Robust to sensor outages.** When a sensor's latest reading is missing, ST-GAT gets
+  28% worse at 60 minutes, about as robust as the tabular models with forward-filled
+  features (24–32%). Fed the outages as 0 mph instead, it is 0.26 mph worse at 60 minutes.
 - **Simulated signal control.** In an offline replay of the test period, a controller
   that switches to a congestion plan based on graph-model forecasts is already switched
-  on before 30–39% of congestion onsets, against 20% with the per-segment model and 0%
+  on before 30–36% of congestion onsets, against 20% with the per-segment model and 0%
   for a purely reactive one. This is a simulation only; we don't claim live control.
 
 The full numbers (RMSE, MAPE, peak vs off-peak, significance tests, confidence
@@ -81,7 +80,7 @@ python scripts/run_classical.py        # baselines, ridge, gradient boosting, ~4
 bash scripts/run_deep_experiments.sh   # Phase 1 Graph WaveNet, a few hours
 python scripts/evaluate.py             # Phase 1 tables and figures
 bash scripts/run_phase2.sh             # Phase 2: XGBoost per segment, ST-GAT, hybrid,
-                                       # ablations, LSTM and evaluation (~6 h on an M3)
+                                       # ablations and evaluation (~6 h on an M3)
 ```
 
 `run_phase2.sh` is resumable: it skips any run whose results already exist, so after
@@ -169,7 +168,7 @@ scripts/           one script per step; Phase 2: run_segment_xgb.py, train_deep.
 tests/             pytest tests (leakage, alignment, masking, graph, attention, hybrid)
 notebooks/         01_eda.ipynb, the exploratory analysis with notes
 results/           metrics, tables, figures, training history and logs (p2_* = Phase 2)
-checkpoints/       trained Graph WaveNet, ST-GAT and hybrid weights
+checkpoints/       trained ST-GAT and hybrid weights (and the Phase 1 Graph WaveNet)
 app/               the Streamlit app, plus screenshots
 report/            IEEE-format LaTeX paper (main.tex, compiled to main.pdf)
 presentation/      Phase 2 slides (slides.tex, compiled to slides.pdf)

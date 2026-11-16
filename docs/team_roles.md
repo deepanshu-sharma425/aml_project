@@ -44,7 +44,7 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
   Section IX-F (attention analysis), Section IX-H (training behaviour)
 - **Slides:** "ST-GAT: spatio-temporal graph attention network", "Graph attention: why,
   and how it differs", "Deep learning dataset and regularisation", "Where does ST-GAT look?"
-- **Key numbers:** 163,516 parameters (Graph WaveNet: 300,952); 2 blocks, 4+4 heads, d = 64;
+- **Key numbers:** 163,516 parameters; 2 blocks, 4+4 heads, d = 64;
   ST-GAT 3.04 mph average, 3.47 at 60 min
 - **Viva:** sections 2 and 4. Be ready for: the GAT equations, why two attention directions,
   why attention is shared across a window, why GAT generalises mean aggregation, every
@@ -81,7 +81,7 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
 - **Slides:** "Accuracy at every horizon", "Peak, off-peak and congestion",
   "Validation and robustness", and the ablation slides (added when the runs finish)
 - **Key numbers:** DM vs XGBoost p < 0.001 at all horizons; removing the graph raises
-  ablation MAE from 3.08 to 3.20 mph; outage degradation 52 % (Graph WaveNet) vs 28 % (ST-GAT)
+  ablation MAE from 3.08 to 3.20 mph; ST-GAT fed 0 mph for outages is 0.26 mph worse at 60 min
 - **Viva:** sections 5, 6 and the bootstrap question in 9. Be ready for: why
   Newey-West, why day blocks, what each ablation removes, why ablations share one budget.
 - **Ablation numbers to know:** ST-GAT full 3.08, mean aggregation 3.10, all-pairs attention
@@ -99,7 +99,7 @@ Viva answers for every part are in `docs/viva_notes.md` (section numbers below).
 - **Slides:** "The question", "Congestion map", "Simulated signal-plan switching
   (offline only)", "Conclusions and limitations"; also assembles and rehearses the deck
 - **Key numbers:** onsets anticipated: reactive 0 %, XGBoost 20 %, ST-GAT 30 %,
-  hybrid 36 %, Graph WaveNet 39 %; median lead 10 min. No live-control claim.
+  hybrid 36 %; median lead 10 min. No live-control claim.
 - **Viva:** sections 7 and 8. Be ready for: GAT (Veličković 2018), CityFlow (Zhang 2019),
   DCRNN, STGCN, Graph WaveNet, GMAN, and why we did not use SUMO.
 - **Open tasks:** put everyone's names in `report/main.tex` and `presentation/slides.tex`;

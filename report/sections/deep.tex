@@ -93,8 +93,7 @@ $\mathcal{H}\leftarrow\operatorname{Dropout}\big(\operatorname{LN}(\Gamma_2(\mat
 with $\mathcal{H}'=\Gamma_1(\mathcal{H})$ and layer normalisation~\cite{ba2016layernorm}.
 Two blocks shrink the window $12{\to}10{\to}8{\to}6{\to}4$ steps, a final gated
 convolution of width 4 collapses it to one vector per sensor, and a two-layer MLP
-outputs all 12 horizons at once (direct strategy). The model has 163,516 parameters,
-about half as many as Graph WaveNet (300,952).
+outputs all 12 horizons at once (direct strategy). The model has 163,516 parameters.
 
 \textbf{Receptive field and complexity.} Every output sees all 12 input steps.
 Spatially, two blocks give two hops in each direction, which covers on average 36

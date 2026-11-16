@@ -1,8 +1,8 @@
 \section{Phase 1 Results: Features and Graph WaveNet}
 \label{sec:results}
-The full test-set comparison of all models, Phase~1 and Phase~2, is in
-Table~\ref{tab:p2main} (Section~\ref{sec:p2results}). Here we summarise the Phase~1
-findings that shaped Phase~2.
+The Phase~2 comparison of XGBoost per segment, ST-GAT and the hybrid with the simple
+baselines is in Table~\ref{tab:p2main} (Section~\ref{sec:p2results}). Here we
+summarise the Phase~1 findings that shaped Phase~2.
 
 \textbf{Features.} The cumulative ablation (Table~\ref{tab:feat_ablation},
 Fig.~\ref{fig:fe}) shows that the weekly profile is the most valuable group at long
@@ -27,8 +27,7 @@ permutation importance at 15 and 60\,min (increase in validation MAE).}
 
 \textbf{Graph WaveNet versus engineered features.} Graph WaveNet beats gradient
 boosting at every horizon (2.72/3.10/3.59 vs.\ 2.89/3.29/3.66\,mph), and
-Diebold--Mariano tests reject equal accuracy ($p<0.001$ at all horizons;
-Table~\ref{tab:p2dm} contains the Phase~2 pairs). At 60\,min, however, the margin is
+Diebold--Mariano tests reject equal accuracy ($p<0.001$ at all horizons). At 60\,min, however, the margin is
 only 0.07\,mph, and gradient boosting trains in 10~minutes on a CPU against 2.4~hours
 on a laptop GPU. Our Graph WaveNet reproduces the published
 numbers closely (3.59 vs.\ 3.53\,mph at 60\,min) despite stopping after 26 epochs.

@@ -8,7 +8,7 @@
 weekly profile and sensor statistics are fit on the training period only. The test
 split is used once, after all model selection.
 
-\textbf{Inputs.} The Phase~1 deep models (LSTM, Graph WaveNet) receive two channels per sensor and step: z-scored speed
+\textbf{Inputs.} The Phase~1 deep model (Graph WaveNet) receives two channels per sensor and step: z-scored speed
 (mean 58.58, std 12.83, from observed training values) and time of day in $[0,1)$.
 Following the reference pipeline, missing inputs keep their raw value 0, which
 z-scores to $-4.57$; this is a distinctive value the network can learn to recognise.
@@ -38,7 +38,6 @@ Model & Settings \\
 \midrule
 Ridge & $\lambda\in\{10^{-2},1,10^{2},10^{3}\}$, standardised features, one model per horizon \\
 Grad.\ boosting & absolute loss; $(\nu,\text{leaves})\in\{(0.1,31),(0.1,127),(0.05,63)\}$; min leaf 100; $\ell_2{=}1$; $\le$400 (800 for $\nu{=}0.05$) iterations, early stopping (patience 20); one model per horizon \\
-LSTM & 2 layers, 64 units, dropout 0.1, MLP head, raw inputs, no graph; Adam lr $10^{-3}$, weight decay $10^{-4}$, batch 32, $\le$30 epochs of half the windows, patience 6 \\
 Graph WaveNet & 4 blocks $\times$ 2 layers, kernel 2, channels 32/32/256/512 (residual/dilation/skip/end), diffusion order 2, embedding dim 10, dropout 0.3; Adam lr $10^{-3}$, weight decay $10^{-4}$, clip 5, batch 32, $\le$35 epochs, patience 8 \\
 XGBoost per segment & one multi-output model per sensor, vector-leaf trees, absolute loss, depth 6, $\nu{=}0.1$, $\le$400 trees, early stopping (patience 30), every 2nd training window \\
 ST-GAT & $d{=}64$, 2 ST blocks, $K_t{=}3$, 4+4 directional heads, node embedding 16, dropout 0.2, attention dropout 0.1; AdamW lr $10^{-3}$, weight decay $10^{-4}$, clip 5, batch 32, LR halving (patience 3), $\le$40 epochs of half the windows, patience 8 \\
